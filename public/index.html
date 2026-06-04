@@ -17,11 +17,7 @@
         <p class="subtitle">2026 FIFA World Cup</p>
       </div>
     </div>
-    <button class="menu-btn" onclick="openMenu()">
-      <span class="menu-btn-dot"></span>
-      <span class="menu-btn-dot"></span>
-      <span class="menu-btn-dot"></span>
-    </button>
+    <button class="menu-btn" onclick="openMenu()">⚙️</button>
   </div>
   <!-- Tab bar -->
   <div class="tab-bar">
@@ -74,7 +70,7 @@
         <span class="avatar-pick-label">Photo</span>
       </div>
       <input type="text" id="playerNameInput" placeholder="Enter name..." class="modal-input" maxlength="40" style="margin-bottom:0;flex:1" />
-      <input type="file" id="addPhotoInput" accept="image/*" capture="user" style="display:none" onchange="handlePhotoSelect('addPhotoPreview', this)" />
+      <input type="file" id="addPhotoInput" accept="image/*" style="display:none" onchange="handlePhotoSelect('addPhotoPreview', this)" />
     </div>
     <div class="modal-actions" style="margin-top:16px">
       <button class="btn btn-ghost" onclick="closeModal('addPlayerModal')">Cancel</button>

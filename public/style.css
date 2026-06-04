@@ -78,32 +78,25 @@ h1 {
 
 .last-updated { display: none; }
 
-/* Menu button — 3-dot vertical */
+/* Gear menu button */
 .menu-btn {
   background: rgba(255,255,255,0.07);
   border: 1px solid rgba(255,255,255,0.12);
-  width: 38px;
-  height: 38px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   cursor: pointer;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
   flex-shrink: 0;
+  font-size: 18px;
   transition: background 0.15s;
+  line-height: 1;
 }
-.menu-btn:hover, .menu-btn:active { background: rgba(255,255,255,0.14); }
-.menu-btn-dot {
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: var(--text);
-  display: block;
-}
+.menu-btn:hover, .menu-btn:active { background: rgba(255,255,255,0.15); }
 
-/* Menu list — no gaps, connected rows */
+/* Menu list — compact iOS-style */
 .menu-list {
   display: flex;
   flex-direction: column;
@@ -111,19 +104,19 @@ h1 {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   overflow: hidden;
-  margin-bottom: 2px;
+  margin-bottom: 8px;
 }
 .menu-item {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
   width: 100%;
-  padding: 16px 16px;
+  padding: 13px 16px;
   background: transparent;
   border: none;
   border-bottom: 1px solid var(--border);
   color: var(--text);
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   text-align: left;
@@ -131,9 +124,9 @@ h1 {
 }
 .menu-item:last-child { border-bottom: none; }
 .menu-item:active { background: var(--border); }
-.menu-item-icon { font-size: 20px; width: 28px; text-align: center; }
+.menu-item-icon { font-size: 16px; width: 24px; text-align: center; opacity: 0.85; }
 .menu-item-label { flex: 1; }
-.menu-item-arrow { color: var(--muted); font-size: 22px; font-weight: 300; }
+.menu-item-arrow { color: var(--muted); font-size: 16px; font-weight: 400; }
 
 /* Buttons */
 .btn {
