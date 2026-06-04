@@ -3,8 +3,8 @@ import { json } from '../../../_shared.js';
 export async function onRequestPost({ env, params, request }) {
   const { teamCode } = await request.json();
 
-  const team   = await env.DB.prepare('SELECT 1 FROM teams WHERE code = ?').bind(teamCode).first();
-  const player = await env.DB.prepare('SELECT 1 FROM players WHERE id = ?').bind(params.id).first();
+  const team   = await env.DB.prepare('SELECT code, name, flag FROM teams WHERE code = ?').bind(teamCode).first();
+  const player = await env.DB.prepare('SELECT id, name FROM players WHERE id = ?').bind(params.id).first();
   const taken  = await env.DB.prepare('SELECT 1 FROM player_teams WHERE team_code = ?').bind(teamCode).first();
 
   if (!team)   return json({ error: 'Team not found' }, 404);
