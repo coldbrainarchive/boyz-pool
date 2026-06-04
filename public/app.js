@@ -456,41 +456,50 @@ function renderMatchRow(m) {
   const away = m.awayTeam;
   const homeTeam = teamsData.find(t => t.code === home?.tla) || {};
   const awayTeam = teamsData.find(t => t.code === away?.tla) || {};
-  const homeFlag = homeTeam.flag || '';
-  const awayFlag = awayTeam.flag || '';
 
   const isFinished = m.status === 'FINISHED';
-  const isLive = m.status === 'IN_PLAY' || m.status === 'PAUSED';
+  const isLive = ['IN_PLAY','PAUSED','HALFTIME'].includes(m.status);
   const localTime = new Date(m.utcDate).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-  const stageLabel = m.stage?.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, c => c.toUpperCase()) || '';
 
-  let center;
-  if (isFinished) {
-    center = `<span class="match-score">${m.score?.fullTime?.home ?? '?'} – ${m.score?.fullTime?.away ?? '?'}</span>`;
-  } else if (isLive) {
-    center = `<span class="match-score live">● LIVE</span>`;
-  } else {
-    center = `<span class="match-time">${localTime}</span>`;
-  }
+  const stageLabel = (m.group || m.stage || '')
+    .replace(/_/g, ' ')
+    .replace(/GROUP /i, 'Group ')
+    .replace(/ROUND OF /i, 'Round of ')
+    .replace(/QUARTER FINALS/i, 'Quarterfinals')
+    .replace(/SEMI FINALS/i, 'Semifinals');
+
+  const timeDisplay = isFinished
+    ? `<span class="match-score-val">${m.score?.fullTime?.home ?? '?'} – ${m.score?.fullTime?.away ?? '?'}</span>`
+    : isLive
+    ? `<span class="match-time live">🔴 LIVE</span>`
+    : `<span class="match-time">${localTime}</span>`;
 
   const homeOwner = home?.tla ? leaderboardData.find(p => p.teams.some(t => t.code === home.tla)) : null;
   const awayOwner = away?.tla ? leaderboardData.find(p => p.teams.some(t => t.code === away.tla)) : null;
 
   return `
-    <div class="match-row ${isLive ? 'match-live' : ''}">
-      <div class="match-team match-home">
-        <span class="match-flag">${homeFlag}</span>
-        <span class="match-name">${home?.name || '?'}</span>
-        ${homeOwner ? `<span class="match-owner">${escHtml(homeOwner.name)}</span>` : ''}
+    <div class="match-card ${isLive ? 'match-live' : ''}">
+      <div class="match-meta">
+        ${timeDisplay}
+        <span class="match-meta-dot">•</span>
+        <span class="match-stage">${stageLabel}</span>
       </div>
-      <div class="match-center">
-        ${center}
-        <div class="match-stage">${stageLabel}</div>
-      </div>
-      <div class="match-team match-away">
-        ${awayOwner ? `<span class="match-owner">${escHtml(awayOwner.name)}</span>` : ''}
-        <span class="match-name">${away?.name || '?'}</span>
-        <span class="match-flag">${awayFlag}</span>
+      <div class="match-teams">
+        <div class="match-team-left">
+          <span class="match-flag">${homeTeam.flag || '🏳'}</span>
+          <div>
+            <div class="match-name">${home?.name || '?'}</div>
+            ${homeOwner ? `<span class="match-owner">${escHtml(homeOwner.name)}</span>` : ''}
+          </div>
+        </div>
+        <div class="match-vs">vs</div>
+        <div class="match-team-right">
+          <div style="text-align:right">
+            <div class="match-name">${away?.name || '?'}</div>
+            ${awayOwner ? `<span class="match-owner">${escHtml(awayOwner.name)}</span>` : ''}
+          </div>
+          <span class="match-flag">${awayTeam.flag || '🏳'}</span>
+        </div>
       </div>
     </div>`;
 }
@@ -498,18 +507,14 @@ function renderMatchRow(m) {
 // ─── Sync ─────────────────────────────────────────────────────────────────────
 
 async function triggerSync() {
-  const btn = document.getElementById('syncBtn');
-  btn.textContent = '⏳ Syncing...';
-  btn.disabled = true;
+  closeModal('menuModal');
+  showToast('Syncing scores…', '');
   try {
     const res = await fetch('/api/sync', { method: 'POST' });
     const data = await res.json();
     if (res.ok) { showToast('Scores synced!', 'success'); await loadAll(); }
     else showToast(data.error || 'Sync failed', 'error');
-  } finally {
-    btn.textContent = '🔄 Sync';
-    btn.disabled = false;
-  }
+  } catch { showToast('Sync failed', 'error'); }
 }
 
 // ─── Modals ───────────────────────────────────────────────────────────────────
@@ -517,6 +522,7 @@ async function triggerSync() {
 function openModal(id) { document.getElementById(id).classList.add('open'); }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 function openRules() { openModal('rulesModal'); }
+function openMenu() { openModal('menuModal'); }
 
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open'));

@@ -17,12 +17,7 @@
         <p class="subtitle">2026 FIFA World Cup</p>
       </div>
     </div>
-    <div class="header-actions">
-      <button class="btn btn-ghost" onclick="openRules()">📋 Rules</button>
-      <button class="btn btn-ghost" onclick="openSettings()">⚙️ Scoring</button>
-      <button class="btn btn-ghost" onclick="triggerSync()" id="syncBtn">🔄 Sync</button>
-      <span class="last-updated" id="lastUpdated"></span>
-    </div>
+    <button class="menu-btn" onclick="openMenu()">☰</button>
   </div>
   <!-- Tab bar -->
   <div class="tab-bar">
@@ -162,6 +157,33 @@
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeModal('settingsModal')">Cancel</button>
       <button class="btn btn-primary" onclick="saveSettings()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Menu Modal -->
+<div class="modal-overlay" id="menuModal">
+  <div class="modal">
+    <h3>Menu</h3>
+    <div class="menu-list">
+      <button class="menu-item" onclick="closeModal('menuModal'); openRules()">
+        <span class="menu-item-icon">📋</span>
+        <span>Rules</span>
+        <span class="menu-item-arrow">›</span>
+      </button>
+      <button class="menu-item" onclick="closeModal('menuModal'); openSettings()">
+        <span class="menu-item-icon">⚙️</span>
+        <span>Customize Scoring</span>
+        <span class="menu-item-arrow">›</span>
+      </button>
+      <button class="menu-item" onclick="closeModal('menuModal'); triggerSync()" id="syncBtn">
+        <span class="menu-item-icon">🔄</span>
+        <span>Sync Scores</span>
+        <span class="menu-item-arrow">›</span>
+      </button>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('menuModal')" style="width:100%">Close</button>
     </div>
   </div>
 </div>
