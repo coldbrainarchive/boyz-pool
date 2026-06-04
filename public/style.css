@@ -78,45 +78,62 @@ h1 {
 
 .last-updated { display: none; }
 
-/* Hamburger menu button */
+/* Menu button — 3-dot vertical */
 .menu-btn {
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  color: var(--text);
-  font-size: 18px;
-  width: 40px;
-  height: 40px;
-  border-radius: var(--radius-sm);
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.12);
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
   cursor: pointer;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 4px;
   flex-shrink: 0;
   transition: background 0.15s;
 }
-.menu-btn:hover { background: var(--border); }
+.menu-btn:hover, .menu-btn:active { background: rgba(255,255,255,0.14); }
+.menu-btn-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--text);
+  display: block;
+}
 
-/* Menu list */
-.menu-list { display: flex; flex-direction: column; gap: 6px; }
+/* Menu list — no gaps, connected rows */
+.menu-list {
+  display: flex;
+  flex-direction: column;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: 2px;
+}
 .menu-item {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
   width: 100%;
-  padding: 14px 16px;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
+  padding: 16px 16px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--border);
   color: var(--text);
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 600;
   cursor: pointer;
   text-align: left;
-  transition: background 0.15s;
+  transition: background 0.1s;
 }
-.menu-item:hover { background: var(--border); }
-.menu-item-icon { font-size: 18px; }
-.menu-item-arrow { margin-left: auto; color: var(--muted); font-size: 20px; }
+.menu-item:last-child { border-bottom: none; }
+.menu-item:active { background: var(--border); }
+.menu-item-icon { font-size: 20px; width: 28px; text-align: center; }
+.menu-item-label { flex: 1; }
+.menu-item-arrow { color: var(--muted); font-size: 22px; font-weight: 300; }
 
 /* Buttons */
 .btn {
@@ -736,7 +753,7 @@ select.modal-input option { background: var(--surface); }
   .trophy { font-size: 22px; }
   h1 { font-size: 17px; }
   .subtitle { display: block; font-size: 10px; letter-spacing: 0.6px; margin-top: 1px; }
-  .menu-btn { width: 36px; height: 36px; font-size: 16px; }
+  .menu-btn { width: 36px; height: 36px; }
   .tab-bar { margin: 0 -16px; }
   .tab { font-size: 13px; padding: 10px 4px; }
 

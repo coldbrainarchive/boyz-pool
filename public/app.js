@@ -508,6 +508,7 @@ function renderMatchRow(m) {
 
 async function triggerSync() {
   closeModal('menuModal');
+  await new Promise(r => setTimeout(r, 220));
   showToast('Syncing scores…', '');
   try {
     const res = await fetch('/api/sync', { method: 'POST' });
@@ -523,6 +524,8 @@ function openModal(id) { document.getElementById(id).classList.add('open'); }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 function openRules() { openModal('rulesModal'); }
 function openMenu() { openModal('menuModal'); }
+// Close menu then open next modal after animation finishes
+function menuAction(fn) { closeModal('menuModal'); setTimeout(fn, 220); }
 
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open'));
