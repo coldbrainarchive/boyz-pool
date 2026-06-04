@@ -646,7 +646,7 @@ select.modal-input option { background: var(--surface); }
 /* ─── Mobile ─────────────────────────────────────────────────────────────── */
 @media (max-width: 640px) {
 
-  /* Header: stack title row + buttons row */
+  /* ── Header ── */
   header { padding: 0 16px; }
   .header-inner {
     height: auto;
@@ -659,7 +659,6 @@ select.modal-input option { background: var(--surface); }
   .trophy { font-size: 22px; }
   h1 { font-size: 17px; }
   .subtitle { display: none; }
-
   .header-actions {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
@@ -669,21 +668,18 @@ select.modal-input option { background: var(--surface); }
     padding: 9px 4px;
     font-size: 12px;
     text-align: center;
-    justify-content: center;
   }
   .last-updated { display: none; }
 
-  /* Main */
+  /* ── Main ── */
   main { padding: 14px; gap: 24px; }
-
-  /* Section headers */
   .section-header h2 { font-size: 16px; }
   .section-header .btn { padding: 8px 12px; font-size: 12px; }
 
-  /* Player cards: rank | info | pts | delete */
+  /* ── Player cards ── */
   .player-card {
     grid-template-columns: 36px 1fr 50px 32px;
-    padding: 12px 12px;
+    padding: 12px;
     gap: 8px;
   }
   .player-rank { font-size: 17px; }
@@ -693,42 +689,109 @@ select.modal-input option { background: var(--surface); }
   .team-chip { font-size: 11px; padding: 3px 8px; }
   .add-team-chip { font-size: 11px; padding: 3px 8px; }
 
-  /* Teams grid: 2 columns */
-  .group-teams {
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-  }
-  .team-card { padding: 10px 10px; }
+  /* ── Teams grid ── */
+  .group-teams { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .team-card { padding: 10px; }
   .team-card-flag { font-size: 20px; }
   .team-card-name { font-size: 12px; }
   .team-card-code { font-size: 10px; }
   .team-card-claimed { font-size: 10px; }
 
-  /* Modals: slide up as bottom sheet */
+  /* ── Modals: full-width bottom sheet ── */
   .modal-overlay { align-items: flex-end; }
+
   .modal {
-    border-radius: 20px 20px 0 0;
+    border-radius: 22px 22px 0 0;
     max-width: 100%;
     width: 100%;
-    padding: 24px 20px 32px;
-    animation: slideUpMobile 0.25s ease;
+    padding: 0;
+    max-height: 88vh;
+    display: flex;
+    flex-direction: column;
+    animation: slideUpSheet 0.28s cubic-bezier(0.32, 0.72, 0, 1);
   }
   .modal-wide { max-width: 100%; }
 
-  @keyframes slideUpMobile {
+  @keyframes slideUpSheet {
     from { transform: translateY(100%); }
     to   { transform: translateY(0); }
   }
 
-  /* Settings grid on mobile */
-  .settings-row { flex-direction: column; align-items: flex-start; gap: 6px; }
-  .settings-input-wrap { align-self: flex-end; }
+  /* Drag handle */
+  .modal::before {
+    content: '';
+    display: block;
+    width: 36px;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    margin: 12px auto 0;
+    flex-shrink: 0;
+  }
 
-  /* Score rows */
-  .score-row { font-size: 12px; padding: 6px 10px; }
-  .score-row-pts { gap: 6px; }
+  /* Scrollable inner content */
+  .modal > *:not(.modal-actions):not(h3) { flex: 1; overflow-y: auto; }
+  .modal h3 {
+    font-size: 17px;
+    padding: 16px 20px 0;
+    flex-shrink: 0;
+    margin-bottom: 0;
+  }
+  .modal-sub { padding: 6px 20px 0; margin-bottom: 0; }
+  .modal-input { margin: 12px 20px 0; width: calc(100% - 40px); }
+  select.modal-input { width: calc(100% - 40px); }
 
-  /* Match rows */
+  /* Modal body padding */
+  .rules-list,
+  .scoring-table,
+  .settings-grid {
+    padding: 0 20px;
+    margin-top: 12px;
+  }
+
+  .modal h4 { padding: 0 20px; margin-top: 14px; }
+  .settings-max-note { padding: 0 20px; }
+
+  /* Sticky modal footer */
+  .modal-actions {
+    flex-shrink: 0;
+    display: flex;
+    gap: 8px;
+    padding: 14px 20px 28px;
+    border-top: 1px solid var(--border);
+    margin-top: 12px;
+    background: var(--surface);
+  }
+  .modal-actions .btn {
+    flex: 1;
+    padding: 13px;
+    font-size: 14px;
+    text-align: center;
+  }
+
+  /* ── Rules list ── */
+  .rules-list { gap: 6px; }
+  .rules-list li { font-size: 13px; padding: 9px 12px; line-height: 1.4; }
+
+  /* ── Scoring table ── */
+  .score-row { padding: 8px 10px; gap: 8px; }
+  .score-row span:first-child { font-size: 12px; }
+  .score-row-pts { gap: 8px; }
+  .pts-bonus { font-size: 13px; min-width: 24px; }
+  .pts-total { font-size: 11px; }
+
+  /* ── Settings rows ── */
+  .settings-row {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 12px;
+    gap: 12px;
+  }
+  .settings-row label { font-size: 12px; }
+  .pts-input { width: 44px; font-size: 15px; }
+
+  /* ── Match rows ── */
   .match-row { padding: 8px 10px; gap: 6px; }
   .match-name { font-size: 11px; }
   .match-flag { font-size: 15px; }
@@ -736,6 +799,6 @@ select.modal-input option { background: var(--surface); }
   .match-score { font-size: 15px; }
   .match-center { min-width: 54px; }
 
-  /* Toast closer to bottom */
+  /* ── Toast ── */
   .toast { bottom: 16px; font-size: 13px; padding: 8px 16px; width: 85%; text-align: center; }
 }
