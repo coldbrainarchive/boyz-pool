@@ -6,6 +6,8 @@ let pendingAssignTeamCode = null;
 let pendingUnassign = null;
 let activeFilter = 'all';
 let matchFilter = 'upcoming';
+let activeTab = 'leaderboard';
+let scheduleRefreshTimer = null;
 
 const STAGE_LABELS = {
   GROUP:  'Groups',
@@ -46,9 +48,18 @@ async function loadMatches() {
   try {
     const res = await fetch('/api/matches');
     const data = await res.json();
+    if (data.noApiKey) {
+      document.getElementById('matchesList').innerHTML = `
+        <div class="empty-state">
+          <div class="big-icon">🔑</div>
+          <p style="font-weight:700;margin-bottom:8px">API key needed for live schedule</p>
+          <p style="font-size:13px;color:var(--muted)">In Cloudflare Pages → Settings → Environment Variables, add:<br><br>
+          <strong style="color:var(--accent)">FOOTBALL_DATA_API_KEY</strong><br><br>
+          Get a free key at <strong>football-data.org</strong></p>
+        </div>`;
+      return;
+    }
     matchesData = data.matches || [];
-    const section = document.getElementById('scheduleSection');
-    if (section) section.style.display = matchesData.length ? '' : 'none';
     renderMatches();
   } catch (_) {}
 }
@@ -384,15 +395,38 @@ async function saveSettings() {
   await loadLeaderboard();
 }
 
+// ─── Tab switching ────────────────────────────────────────────────────────────
+
+function switchTab(tab) {
+  activeTab = tab;
+  document.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === `tab-${tab}`));
+
+  // Auto-refresh schedule every 60s while viewing it
+  clearInterval(scheduleRefreshTimer);
+  if (tab === 'schedule') {
+    loadMatches();
+    scheduleRefreshTimer = setInterval(loadMatches, 60_000);
+  }
+}
+
 // ─── Schedule ─────────────────────────────────────────────────────────────────
 
 function renderMatches() {
   const el = document.getElementById('matchesList');
   if (!el || !matchesData.length) return;
 
+  const liveStatuses = ['IN_PLAY', 'PAUSED', 'HALFTIME'];
+
   let filtered = [...matchesData];
-  if (matchFilter === 'upcoming') {
-    filtered = filtered.filter(m => ['SCHEDULED','TIMED','IN_PLAY','PAUSED'].includes(m.status));
+  if (matchFilter === 'live') {
+    filtered = filtered.filter(m => liveStatuses.includes(m.status));
+    if (!filtered.length) {
+      el.innerHTML = `<div class="empty-state"><div class="big-icon">⏸</div><p>No live matches right now</p></div>`;
+      return;
+    }
+  } else if (matchFilter === 'upcoming') {
+    filtered = filtered.filter(m => ['SCHEDULED','TIMED'].includes(m.status));
   } else if (matchFilter === 'finished') {
     filtered = filtered.filter(m => m.status === 'FINISHED').reverse();
   }
@@ -503,6 +537,10 @@ document.querySelectorAll('.match-filter-btn').forEach(btn => {
     document.querySelectorAll('.match-filter-btn').forEach(b => b.classList.toggle('active', b === btn));
     renderMatches();
   });
+});
+
+document.querySelectorAll('.tab').forEach(btn => {
+  btn.addEventListener('click', () => switchTab(btn.dataset.tab));
 });
 
 // ─── Toast ────────────────────────────────────────────────────────────────────
