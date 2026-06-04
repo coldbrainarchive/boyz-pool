@@ -6,7 +6,6 @@ export async function onRequestGet({ env }) {
       SELECT id, action, player_name, team_code, team_name, team_flag, stage, created_at
       FROM activity_log
       ORDER BY id DESC
-      LIMIT 50
     `).all();
     return json(results);
   } catch (err) {

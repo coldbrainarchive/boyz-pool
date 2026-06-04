@@ -687,6 +687,10 @@ select.modal-input option { background: var(--surface); }
   display: flex;
   flex-direction: column;
   gap: 4px;
+  max-height: 420px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 .activity-empty {
   font-size: 13px;
