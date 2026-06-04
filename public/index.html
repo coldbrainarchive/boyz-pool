@@ -33,9 +33,20 @@
       <h2>🏆 Leaderboard</h2>
       <button class="btn btn-primary" onclick="openAddPlayer()">+ Add Player</button>
     </div>
-    <div id="leaderboard" class="leaderboard" style="margin-bottom:32px"></div>
+    <div id="leaderboard" class="leaderboard"></div>
 
-    <div class="section-header">
+    <!-- Activity Log (collapsible) -->
+    <div class="section-header collapsible-header" onclick="toggleActivity()" style="margin-top:28px;cursor:pointer">
+      <div class="activity-header-left">
+        <h2>📋 Activity</h2>
+        <span class="activity-badge" id="activityBadge"></span>
+      </div>
+      <span class="collapse-arrow" id="activityArrow">›</span>
+    </div>
+    <div id="activityLog" class="activity-log collapsed"></div>
+
+    <!-- All Teams -->
+    <div class="section-header" style="margin-top:28px">
       <h2>🌍 All Teams</h2>
       <div class="filter-row">
         <button class="filter-btn active" data-filter="all">All Groups</button>
@@ -43,12 +54,6 @@
       </div>
     </div>
     <div id="teamsGrid" class="teams-grid"></div>
-
-    <!-- Activity Log -->
-    <div class="section-header" style="margin-top:32px">
-      <h2>📋 Activity</h2>
-    </div>
-    <div id="activityLog" class="activity-log"></div>
   </div>
 
   <!-- Schedule tab -->

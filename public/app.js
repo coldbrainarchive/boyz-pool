@@ -8,7 +8,9 @@ let activeFilter = 'all';
 let matchFilter = 'upcoming';
 let activeTab = 'leaderboard';
 let scheduleRefreshTimer = null;
-let pendingPhoto = null; // base64 data URL
+let pendingPhoto = null;
+let activityExpanded = false;
+let activityEntries = [];
 
 const STAGE_LABELS = {
   GROUP:  'Groups',
@@ -48,23 +50,52 @@ async function loadSettings() {
 async function loadActivity() {
   try {
     const res = await fetch('/api/activity');
-    const entries = await res.json();
-    renderActivity(entries);
+    activityEntries = await res.json();
+    renderActivity();
+    updateActivityBadge();
   } catch (_) {}
 }
 
-function renderActivity(entries) {
+function toggleActivity() {
+  activityExpanded = !activityExpanded;
+  const log = document.getElementById('activityLog');
+  const arrow = document.getElementById('activityArrow');
+  log.classList.toggle('collapsed', !activityExpanded);
+  if (arrow) arrow.style.transform = activityExpanded ? 'rotate(90deg)' : '';
+
+  if (activityExpanded) {
+    // Mark all as read
+    localStorage.setItem('lastActivityViewedAt', new Date().toISOString());
+    updateActivityBadge();
+  }
+}
+
+function updateActivityBadge() {
+  const badge = document.getElementById('activityBadge');
+  if (!badge) return;
+  const lastViewed = localStorage.getItem('lastActivityViewedAt');
+  const unread = lastViewed
+    ? activityEntries.filter(e => new Date(e.created_at + 'Z') > new Date(lastViewed)).length
+    : activityEntries.length;
+  if (unread > 0) {
+    badge.textContent = unread;
+    badge.style.display = 'inline-flex';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+function renderActivity() {
   const el = document.getElementById('activityLog');
   if (!el) return;
 
-  if (!entries.length) {
+  if (!activityEntries.length) {
     el.innerHTML = `<div class="activity-empty">No activity yet — add players and pick teams to get started</div>`;
     return;
   }
 
-  el.innerHTML = entries.map(e => {
+  el.innerHTML = activityEntries.map(e => {
     const isAssigned = e.action === 'assigned';
-    const timeStr = timeAgo(e.created_at);
     return `
       <div class="activity-row">
         <span class="activity-flag">${e.team_flag}</span>
@@ -75,7 +106,7 @@ function renderActivity(entries) {
           </span>
           <span class="activity-player">${escHtml(e.player_name)}</span>
         </div>
-        <span class="activity-time">${timeStr}</span>
+        <span class="activity-time">${timeAgo(e.created_at)}</span>
       </div>`;
   }).join('');
 }

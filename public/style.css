@@ -647,6 +647,41 @@ select.modal-input option { background: var(--surface); }
   white-space: nowrap;
 }
 
+/* Activity collapsible header */
+.collapsible-header { user-select: none; }
+.collapsible-header:active { opacity: 0.7; }
+.activity-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.activity-badge {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  background: var(--red);
+  color: white;
+  font-size: 11px;
+  font-weight: 800;
+  border-radius: 10px;
+}
+.collapse-arrow {
+  font-size: 20px;
+  color: var(--muted);
+  font-weight: 300;
+  transition: transform 0.2s ease;
+  line-height: 1;
+  display: block;
+}
+
+/* Collapsible content */
+.activity-log.collapsed {
+  display: none;
+}
+
 /* Activity log */
 .activity-log {
   display: flex;
