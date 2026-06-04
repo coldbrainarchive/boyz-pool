@@ -712,7 +712,17 @@ select.modal-input option { background: var(--surface); }
 .activity-action { font-size: 11px; font-weight: 700; padding: 1px 6px; border-radius: 8px; }
 .activity-action.assigned { color: var(--green); background: rgba(34,197,94,0.12); }
 .activity-action.removed  { color: var(--red);   background: rgba(239,68,68,0.12); }
+.activity-action.stage    { color: var(--gold);  background: rgba(245,197,24,0.12); }
 .activity-player { font-weight: 700; color: var(--accent); }
+.activity-pts {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--green);
+  background: rgba(34,197,94,0.12);
+  padding: 1px 6px;
+  border-radius: 8px;
+}
+.activity-stage { border-color: rgba(245,197,24,0.2); }
 .activity-time { font-size: 11px; color: var(--muted); white-space: nowrap; flex-shrink: 0; }
 
 /* Team card points */

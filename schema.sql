@@ -28,6 +28,17 @@ CREATE TABLE IF NOT EXISTS settings (
   value TEXT NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS activity_log (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  action TEXT NOT NULL,
+  player_name TEXT NOT NULL,
+  team_code TEXT NOT NULL,
+  team_name TEXT NOT NULL,
+  team_flag TEXT NOT NULL,
+  stage TEXT,
+  created_at TEXT DEFAULT (datetime('now'))
+);
+
 INSERT OR IGNORE INTO settings VALUES ('pts_groups',    '5');
 INSERT OR IGNORE INTO settings VALUES ('pts_r16',       '10');
 INSERT OR IGNORE INTO settings VALUES ('pts_qf',        '10');

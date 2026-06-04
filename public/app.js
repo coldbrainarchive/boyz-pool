@@ -29,19 +29,26 @@ async function loadAll() {
 }
 
 async function loadLeaderboard() {
-  const res = await fetch('/api/leaderboard');
-  leaderboardData = await res.json();
-  renderLeaderboard();
+  try {
+    const res = await fetch('/api/leaderboard');
+    if (!res.ok) return;
+    leaderboardData = await res.json();
+    renderLeaderboard();
+  } catch (_) {}
 }
 
 async function loadTeams() {
-  const res = await fetch('/api/teams');
-  teamsData = await res.json();
-  renderTeams();
+  try {
+    const res = await fetch('/api/teams');
+    if (!res.ok) return;
+    teamsData = await res.json();
+    renderTeams();
+  } catch (_) {}
 }
 
 async function loadSettings() {
   const res = await fetch('/api/settings');
+  if (!res.ok) return;
   settingsData = await res.json();
   renderScoringTable();
   updateSettingsMaxPts();
@@ -85,6 +92,16 @@ function updateActivityBadge() {
   }
 }
 
+const STAGE_ADVANCE_LABELS = {
+  GROUP:  'eliminated in groups',
+  R32:    'survived the Group Stage',
+  R16:    'reached the Round of 16',
+  QF:     'reached the Quarterfinals',
+  SF:     'reached the Semifinals',
+  FINAL:  'reached the Final!',
+  WINNER: 'won the World Cup! 🏆',
+};
+
 function renderActivity() {
   const el = document.getElementById('activityLog');
   if (!el) return;
@@ -95,6 +112,22 @@ function renderActivity() {
   }
 
   el.innerHTML = activityEntries.map(e => {
+    if (e.action === 'stage_advance') {
+      const label = STAGE_ADVANCE_LABELS[e.stage] || e.stage;
+      const pts = calcTeamPoints(e.stage);
+      const hasOwner = e.player_name && e.player_name !== '';
+      return `
+        <div class="activity-row activity-stage">
+          <span class="activity-flag">${e.team_flag}</span>
+          <div class="activity-text">
+            <span class="activity-team">${escHtml(e.team_name)}</span>
+            <span class="activity-action stage">${label}</span>
+            ${hasOwner ? `<span class="activity-player">${escHtml(e.player_name)}</span>` : ''}
+            ${pts > 0 && hasOwner ? `<span class="activity-pts">+${pts} pts</span>` : ''}
+          </div>
+          <span class="activity-time">${timeAgo(e.created_at)}</span>
+        </div>`;
+    }
     const isAssigned = e.action === 'assigned';
     return `
       <div class="activity-row">
@@ -299,8 +332,8 @@ function renderTeamCard(t) {
   const pts = calcTeamPoints(t.stage);
   return `
     <div class="team-card ${isClaimed ? 'claimed' : ''}"
-         onclick="handleTeamClick('${t.code}', ${isClaimed}, ${t.claimed_by_id || 'null'})"
-         title="${isClaimed ? `${escHtml(t.claimed_by)}'s team — click to unassign` : 'Click to assign to a player'}">
+         onclick="handleTeamClick('${t.code}')"
+         title="${isClaimed ? `${escHtml(t.claimed_by)}'s team — tap to unassign` : 'Tap to assign to a player'}">
       ${t.stage ? `<span class="team-card-stage stage-${t.stage}">${stageLabel}</span>` : ''}
       <div class="team-card-flag">${t.flag}</div>
       <div class="team-card-name">${escHtml(t.name)}</div>
@@ -410,10 +443,10 @@ async function removePlayer(id, name) {
 
 // ─── Team Assignment ──────────────────────────────────────────────────────────
 
-function handleTeamClick(teamCode, isClaimed, claimedById) {
-  if (isClaimed) {
-    const team = teamsData.find(t => t.code === teamCode);
-    openUnassign(claimedById, teamCode, team?.name || teamCode);
+function handleTeamClick(teamCode) {
+  const team = teamsData.find(t => t.code === teamCode);
+  if (team?.claimed_by_id) {
+    openUnassign(team.claimed_by_id, teamCode, team.name);
   } else {
     openAssign(teamCode);
   }
@@ -461,7 +494,7 @@ async function submitAssign() {
   const data = await res.json();
   if (!res.ok) { showToast(data.error, 'error'); return; }
   const team = teamsData.find(t => t.code === teamCode);
-  const player = leaderboardData.find(p => p.id == playerId);
+  const player = leaderboardData.find(p => p.id === parseInt(playerId));
   closeModal('assignModal');
   showToast(`${team?.flag} ${team?.name} → ${player?.name}`, 'success');
   await loadAll();
