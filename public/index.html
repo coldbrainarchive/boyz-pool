@@ -26,24 +26,20 @@
   </div>
   <!-- Tab bar -->
   <div class="tab-bar">
-    <button class="tab active" data-tab="leaderboard">🏆 Standings</button>
-    <button class="tab" data-tab="teams">🌍 Teams</button>
+    <button class="tab active" data-tab="leaderboard">🏆 Pool</button>
     <button class="tab" data-tab="schedule">📅 Schedule</button>
   </div>
 </header>
 
 <main>
-  <!-- Leaderboard tab -->
+  <!-- Pool tab: Leaderboard + Teams -->
   <div class="tab-panel active" id="tab-leaderboard">
     <div class="section-header">
       <h2>🏆 Leaderboard</h2>
       <button class="btn btn-primary" onclick="openAddPlayer()">+ Add Player</button>
     </div>
-    <div id="leaderboard" class="leaderboard"></div>
-  </div>
+    <div id="leaderboard" class="leaderboard" style="margin-bottom:32px"></div>
 
-  <!-- Teams tab -->
-  <div class="tab-panel" id="tab-teams">
     <div class="section-header">
       <h2>🌍 All Teams</h2>
       <div class="filter-row">
