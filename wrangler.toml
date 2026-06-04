@@ -5,4 +5,4 @@ pages_build_output_dir = "public"
 [[d1_databases]]
 binding = "DB"
 database_name = "boyz-pool-db"
-database_id = "REPLACE_WITH_YOUR_DATABASE_ID"
+database_id = "63d9287e-92b1-48b4-bb0d-9fa496bf8b73"
