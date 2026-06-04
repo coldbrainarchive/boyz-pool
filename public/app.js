@@ -288,9 +288,6 @@ function renderLeaderboard() {
           <div class="player-points">${player.totalPoints}</div>
           <div class="player-pts-label">pts</div>
         </div>
-        <div class="player-actions">
-          <button class="icon-btn" onclick="removePlayer(${player.id}, '${escHtml(player.name)}')" title="Remove player">🗑</button>
-        </div>
       </div>`;
   }).join('');
 }
@@ -437,8 +434,32 @@ async function updatePlayerPhoto(playerId) {
 async function removePlayer(id, name) {
   if (!confirm(`Remove ${name} and all their teams?`)) return;
   await fetch(`/api/players/${id}`, { method: 'DELETE' });
+  closeModal('managePLayersModal');
   showToast(`${name} removed`, 'success');
   await loadAll();
+  renderManagePlayers();
+}
+
+function openManagePlayers() {
+  renderManagePlayers();
+  menuAction(() => openModal('managePlayersModal'));
+}
+
+function renderManagePlayers() {
+  const el = document.getElementById('managePlayersList');
+  if (!el) return;
+  if (!leaderboardData.length) {
+    el.innerHTML = `<p style="color:var(--muted);font-size:14px;padding:12px 0">No players yet.</p>`;
+    return;
+  }
+  el.innerHTML = leaderboardData.map(p => `
+    <div class="manage-player-row">
+      ${p.photo
+        ? `<img src="${p.photo}" class="manage-avatar" />`
+        : `<div class="manage-avatar manage-avatar-placeholder">${escHtml(p.name[0].toUpperCase())}</div>`}
+      <span class="manage-player-name">${escHtml(p.name)}</span>
+      <button class="btn btn-danger manage-delete-btn" onclick="removePlayer(${p.id}, '${escHtml(p.name)}')">Remove</button>
+    </div>`).join('');
 }
 
 // ─── Team Assignment ──────────────────────────────────────────────────────────

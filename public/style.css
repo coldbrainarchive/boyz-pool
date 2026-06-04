@@ -250,7 +250,7 @@ main {
   border-radius: var(--radius);
   padding: 16px 20px;
   display: grid;
-  grid-template-columns: 36px 44px 1fr auto auto;
+  grid-template-columns: 36px 44px 1fr auto;
   align-items: center;
   gap: 12px;
   transition: border-color 0.15s;
@@ -639,6 +639,39 @@ select.modal-input option { background: var(--surface); }
 }
 .settings-max-note strong { color: var(--green); }
 
+/* Manage players modal */
+.manage-player-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+.manage-player-row:last-child { border-bottom: none; }
+.manage-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+.manage-avatar-placeholder {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+.manage-player-name { flex: 1; font-size: 15px; font-weight: 700; }
+.manage-delete-btn { padding: 6px 14px; font-size: 12px; }
+
 .settings-static-row { opacity: 0.5; }
 .settings-static-val {
   font-size: 12px;
@@ -898,7 +931,7 @@ select.modal-input option { background: var(--surface); }
 
   /* ── Player cards ── */
   .player-card {
-    grid-template-columns: 28px 38px 1fr 44px 28px;
+    grid-template-columns: 28px 38px 1fr 44px;
     padding: 12px;
     gap: 8px;
   }

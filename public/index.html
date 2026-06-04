@@ -179,6 +179,17 @@
   </div>
 </div>
 
+<!-- Manage Players Modal -->
+<div class="modal-overlay" id="managePlayersModal">
+  <div class="modal">
+    <h3>👥 Manage Players</h3>
+    <div id="managePlayersList"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('managePlayersModal')" style="width:100%">Done</button>
+    </div>
+  </div>
+</div>
+
 <!-- Menu Modal -->
 <div class="modal-overlay" id="menuModal">
   <div class="modal">
@@ -191,6 +202,11 @@
       <button class="menu-item" onclick="menuAction(openSettings)">
         <span class="menu-item-icon">⚙️</span>
         <span class="menu-item-label">Customize Scoring</span>
+        <span class="menu-item-arrow">›</span>
+      </button>
+      <button class="menu-item" onclick="openManagePlayers()">
+        <span class="menu-item-icon">👥</span>
+        <span class="menu-item-label">Manage Players</span>
         <span class="menu-item-arrow">›</span>
       </button>
       <button class="menu-item" onclick="triggerSync()">
