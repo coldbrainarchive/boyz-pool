@@ -23,7 +23,7 @@ const STAGE_LABELS = {
 // ─── Data Loading ─────────────────────────────────────────────────────────────
 
 async function loadAll() {
-  await Promise.all([loadLeaderboard(), loadTeams(), loadSettings(), loadMatches()]);
+  await Promise.all([loadLeaderboard(), loadTeams(), loadSettings(), loadMatches(), loadActivity()]);
 }
 
 async function loadLeaderboard() {
@@ -43,6 +43,52 @@ async function loadSettings() {
   settingsData = await res.json();
   renderScoringTable();
   updateSettingsMaxPts();
+}
+
+async function loadActivity() {
+  try {
+    const res = await fetch('/api/activity');
+    const entries = await res.json();
+    renderActivity(entries);
+  } catch (_) {}
+}
+
+function renderActivity(entries) {
+  const el = document.getElementById('activityLog');
+  if (!el) return;
+
+  if (!entries.length) {
+    el.innerHTML = `<div class="activity-empty">No activity yet — add players and pick teams to get started</div>`;
+    return;
+  }
+
+  el.innerHTML = entries.map(e => {
+    const isAssigned = e.action === 'assigned';
+    const timeStr = timeAgo(e.created_at);
+    return `
+      <div class="activity-row">
+        <span class="activity-flag">${e.team_flag}</span>
+        <div class="activity-text">
+          <span class="activity-team">${escHtml(e.team_name)}</span>
+          <span class="activity-action ${isAssigned ? 'assigned' : 'removed'}">
+            ${isAssigned ? '→ added to' : '✕ removed from'}
+          </span>
+          <span class="activity-player">${escHtml(e.player_name)}</span>
+        </div>
+        <span class="activity-time">${timeStr}</span>
+      </div>`;
+  }).join('');
+}
+
+function timeAgo(utcStr) {
+  const diff = Date.now() - new Date(utcStr + 'Z').getTime();
+  const mins  = Math.floor(diff / 60_000);
+  const hours = Math.floor(diff / 3_600_000);
+  const days  = Math.floor(diff / 86_400_000);
+  if (mins < 1)  return 'just now';
+  if (mins < 60) return `${mins}m ago`;
+  if (hours < 24) return `${hours}h ago`;
+  return `${days}d ago`;
 }
 
 async function loadMatches() {

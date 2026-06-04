@@ -647,6 +647,39 @@ select.modal-input option { background: var(--surface); }
   white-space: nowrap;
 }
 
+/* Activity log */
+.activity-log {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.activity-empty {
+  font-size: 13px;
+  color: var(--muted);
+  text-align: center;
+  padding: 24px;
+  background: var(--surface);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-sm);
+}
+.activity-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+.activity-flag { font-size: 18px; flex-shrink: 0; }
+.activity-text { flex: 1; font-size: 13px; display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+.activity-team { font-weight: 700; }
+.activity-action { font-size: 11px; font-weight: 700; padding: 1px 6px; border-radius: 8px; }
+.activity-action.assigned { color: var(--green); background: rgba(34,197,94,0.12); }
+.activity-action.removed  { color: var(--red);   background: rgba(239,68,68,0.12); }
+.activity-player { font-weight: 700; color: var(--accent); }
+.activity-time { font-size: 11px; color: var(--muted); white-space: nowrap; flex-shrink: 0; }
+
 /* Team card points */
 .team-card-pts {
   font-size: 12px;

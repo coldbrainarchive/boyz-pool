@@ -13,6 +13,9 @@ export async function onRequestPost({ env, params, request }) {
 
   try {
     await env.DB.prepare('INSERT INTO player_teams (player_id, team_code) VALUES (?, ?)').bind(params.id, teamCode).run();
+    await env.DB.prepare(
+      `INSERT INTO activity_log (action, player_name, team_code, team_name, team_flag) VALUES ('assigned', ?, ?, ?, ?)`
+    ).bind(player.name, teamCode, team.name, team.flag).run();
     return json({ success: true });
   } catch (err) {
     return json({ error: err.message }, 500);
