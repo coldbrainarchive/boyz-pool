@@ -68,8 +68,15 @@
 <div class="modal-overlay" id="addPlayerModal">
   <div class="modal">
     <h3>Add Player</h3>
-    <input type="text" id="playerNameInput" placeholder="Enter name..." class="modal-input" maxlength="40" />
-    <div class="modal-actions">
+    <div class="photo-picker-row">
+      <div class="avatar-pick" id="addPhotoPreview" onclick="document.getElementById('addPhotoInput').click()">
+        <span class="avatar-pick-icon">📷</span>
+        <span class="avatar-pick-label">Photo</span>
+      </div>
+      <input type="text" id="playerNameInput" placeholder="Enter name..." class="modal-input" maxlength="40" style="margin-bottom:0;flex:1" />
+      <input type="file" id="addPhotoInput" accept="image/*" capture="user" style="display:none" onchange="handlePhotoSelect('addPhotoPreview', this)" />
+    </div>
+    <div class="modal-actions" style="margin-top:16px">
       <button class="btn btn-ghost" onclick="closeModal('addPlayerModal')">Cancel</button>
       <button class="btn btn-primary" onclick="submitAddPlayer()">Add</button>
     </div>

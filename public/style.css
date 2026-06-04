@@ -257,11 +257,69 @@ main {
   border-radius: var(--radius);
   padding: 16px 20px;
   display: grid;
-  grid-template-columns: 48px 1fr auto auto;
+  grid-template-columns: 36px 44px 1fr auto auto;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
   transition: border-color 0.15s;
 }
+
+/* Player avatar */
+.player-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+  cursor: pointer;
+  border: 2px solid var(--border);
+  transition: border-color 0.15s;
+  display: block;
+  flex-shrink: 0;
+}
+.player-avatar:hover { border-color: var(--accent); }
+.player-avatar-placeholder {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--surface2);
+  border: 2px dashed var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--muted);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: border-color 0.15s, color 0.15s;
+}
+.player-avatar-placeholder:hover { border-color: var(--accent); color: var(--accent); }
+
+/* Photo picker in add player modal */
+.photo-picker-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 0;
+}
+.avatar-pick {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--surface2);
+  border: 2px dashed var(--border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  background-size: cover;
+  background-position: center;
+  transition: border-color 0.15s;
+}
+.avatar-pick:hover { border-color: var(--accent); }
+.avatar-pick-icon { font-size: 18px; }
+.avatar-pick-label { font-size: 9px; color: var(--muted); font-weight: 700; text-transform: uppercase; margin-top: 1px; }
 .player-card:hover { border-color: var(--accent); }
 
 .player-card.rank-1 { border-color: var(--rank1); background: linear-gradient(135deg, rgba(245,197,24,0.08) 0%, var(--surface) 60%); }
@@ -764,10 +822,11 @@ select.modal-input option { background: var(--surface); }
 
   /* ── Player cards ── */
   .player-card {
-    grid-template-columns: 36px 1fr 50px 32px;
+    grid-template-columns: 28px 38px 1fr 44px 28px;
     padding: 12px;
     gap: 8px;
   }
+  .player-avatar, .player-avatar-placeholder { width: 38px; height: 38px; font-size: 14px; }
   .player-rank { font-size: 17px; }
   .player-name { font-size: 15px; }
   .player-points { font-size: 20px; min-width: unset; text-align: center; }

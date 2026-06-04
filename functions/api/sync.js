@@ -17,7 +17,12 @@ async function setStageIfHigher(db, tla, newStage) {
     await db.prepare(`UPDATE teams SET stage = ?, updated_at = datetime('now') WHERE code = ?`).bind(newStage, tla).run();
 }
 
+const TOURNAMENT_START = new Date('2026-06-11T18:00:00Z');
+
 export async function onRequestPost({ env }) {
+  if (new Date() < TOURNAMENT_START)
+    return json({ success: false, message: "Tournament starts June 11 — sync will be available then ⚽" });
+
   if (!env.FOOTBALL_DATA_API_KEY)
     return json({ success: false, message: 'No API key configured' });
 

@@ -8,6 +8,7 @@ let activeFilter = 'all';
 let matchFilter = 'upcoming';
 let activeTab = 'leaderboard';
 let scheduleRefreshTimer = null;
+let pendingPhoto = null; // base64 data URL
 
 const STAGE_LABELS = {
   GROUP:  'Groups',
@@ -150,6 +151,10 @@ function renderLeaderboard() {
     const rankClass = showMedal ? `rank-${rank}` : '';
     const rankLabel = showMedal ? ['🥇','🥈','🥉'][rank-1] : rank;
 
+    const avatar = player.photo
+      ? `<img src="${player.photo}" class="player-avatar" onclick="updatePlayerPhoto(${player.id})" title="Tap to change photo" />`
+      : `<div class="player-avatar player-avatar-placeholder" onclick="updatePlayerPhoto(${player.id})" title="Tap to add photo">${escHtml(player.name[0].toUpperCase())}</div>`;
+
     const teamChips = player.teams.map(t => `
       <span class="team-chip stage-${t.stage || ''}"
             onclick="openUnassign(${player.id}, '${t.code}', '${escHtml(t.name)}')"
@@ -161,6 +166,7 @@ function renderLeaderboard() {
     return `
       <div class="player-card ${rankClass}">
         <div class="player-rank">${rankLabel}</div>
+        ${avatar}
         <div class="player-info">
           <div class="player-name">${escHtml(player.name)}</div>
           <div class="player-teams">
@@ -238,6 +244,10 @@ function applyFilter(filter) {
 // ─── Player Actions ───────────────────────────────────────────────────────────
 
 function openAddPlayer() {
+  pendingPhoto = null;
+  const preview = document.getElementById('addPhotoPreview');
+  preview.style.backgroundImage = '';
+  preview.innerHTML = '<span class="avatar-pick-icon">📷</span><span class="avatar-pick-label">Photo</span>';
   openModal('addPlayerModal');
   document.getElementById('playerNameInput').value = '';
   setTimeout(() => document.getElementById('playerNameInput').focus(), 50);
@@ -246,12 +256,72 @@ function openAddPlayer() {
 async function submitAddPlayer() {
   const name = document.getElementById('playerNameInput').value.trim();
   if (!name) return;
-  const res = await fetch('/api/players', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name }) });
+  const res = await fetch('/api/players', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, photo: pendingPhoto })
+  });
   const data = await res.json();
   if (!res.ok) { showToast(data.error, 'error'); return; }
+  pendingPhoto = null;
   closeModal('addPlayerModal');
   showToast(`${name} added!`, 'success');
   await loadAll();
+}
+
+function handlePhotoSelect(previewId, input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 120; canvas.height = 120;
+      const ctx = canvas.getContext('2d');
+      const size = Math.min(img.width, img.height);
+      const ox = (img.width - size) / 2;
+      const oy = (img.height - size) / 2;
+      ctx.drawImage(img, ox, oy, size, size, 0, 0, 120, 120);
+      pendingPhoto = canvas.toDataURL('image/jpeg', 0.82);
+      const el = document.getElementById(previewId);
+      el.innerHTML = '';
+      el.style.backgroundImage = `url(${pendingPhoto})`;
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+async function updatePlayerPhoto(playerId) {
+  const input = document.createElement('input');
+  input.type = 'file'; input.accept = 'image/*'; input.capture = 'user';
+  input.onchange = async () => {
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = async () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = 120; canvas.height = 120;
+        const ctx = canvas.getContext('2d');
+        const size = Math.min(img.width, img.height);
+        ctx.drawImage(img, (img.width-size)/2, (img.height-size)/2, size, size, 0, 0, 120, 120);
+        const photo = canvas.toDataURL('image/jpeg', 0.82);
+        await fetch(`/api/players/${playerId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ photo })
+        });
+        showToast('Photo updated!', 'success');
+        await loadLeaderboard();
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  };
+  input.click();
 }
 
 async function removePlayer(id, name) {
