@@ -647,28 +647,48 @@ select.modal-input option { background: var(--surface); }
 @media (max-width: 640px) {
 
   /* ── Header ── */
-  header { padding: 0 16px; }
+  header { padding: 0; }
   .header-inner {
     height: auto;
     flex-direction: column;
     align-items: stretch;
-    padding: 10px 0;
-    gap: 8px;
+    padding: 10px 16px 0;
+    gap: 0;
   }
-  .header-title { gap: 8px; }
-  .trophy { font-size: 22px; }
-  h1 { font-size: 17px; }
-  .subtitle { display: none; }
+
+  /* Title row */
+  .header-title { gap: 10px; padding-bottom: 8px; }
+  .trophy { font-size: 24px; }
+  h1 { font-size: 18px; }
+  .subtitle {
+    display: block;
+    font-size: 10px;
+    letter-spacing: 0.8px;
+    margin-top: 1px;
+  }
+
+  /* Tab-style button row */
   .header-actions {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
-    gap: 6px;
+    gap: 0;
+    border-top: 1px solid var(--border);
+    margin: 0 -16px;
   }
   .header-actions .btn {
-    padding: 9px 4px;
-    font-size: 12px;
+    padding: 8px 4px 9px;
+    font-size: 11px;
+    font-weight: 700;
     text-align: center;
+    background: transparent;
+    border: none;
+    border-right: 1px solid var(--border);
+    border-radius: 0;
+    color: var(--muted);
+    letter-spacing: 0.2px;
   }
+  .header-actions .btn:last-child { border-right: none; }
+  .header-actions .btn:active { background: var(--surface2); color: var(--text); }
   .last-updated { display: none; }
 
   /* ── Main ── */
