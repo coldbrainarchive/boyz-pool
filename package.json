@@ -1,0 +1,15 @@
+{
+  "name": "boyz-pool",
+  "version": "1.0.0",
+  "description": "The Boyz Pool - 2026 World Cup Soccer Pool",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.10.0",
+    "dotenv": "^16.6.1",
+    "express": "^4.22.2"
+  }
+}

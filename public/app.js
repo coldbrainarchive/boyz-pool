@@ -1,0 +1,529 @@
+let leaderboardData = [];
+let teamsData = [];
+let matchesData = [];
+let settingsData = {};
+let pendingAssignTeamCode = null;
+let pendingUnassign = null;
+let activeFilter = 'all';
+let matchFilter = 'upcoming';
+
+const STAGE_LABELS = {
+  GROUP:  'Groups',
+  R32:    'R32',
+  R16:    'R16',
+  QF:     'QF',
+  SF:     'SF',
+  FINAL:  'Final',
+  WINNER: '🏆'
+};
+
+// ─── Data Loading ─────────────────────────────────────────────────────────────
+
+async function loadAll() {
+  await Promise.all([loadLeaderboard(), loadTeams(), loadSettings(), loadMatches()]);
+}
+
+async function loadLeaderboard() {
+  const res = await fetch('/api/leaderboard');
+  leaderboardData = await res.json();
+  renderLeaderboard();
+}
+
+async function loadTeams() {
+  const res = await fetch('/api/teams');
+  teamsData = await res.json();
+  renderTeams();
+}
+
+async function loadSettings() {
+  const res = await fetch('/api/settings');
+  settingsData = await res.json();
+  renderScoringTable();
+  updateSettingsMaxPts();
+}
+
+async function loadMatches() {
+  try {
+    const res = await fetch('/api/matches');
+    const data = await res.json();
+    matchesData = data.matches || [];
+    const section = document.getElementById('scheduleSection');
+    if (section) section.style.display = matchesData.length ? '' : 'none';
+    renderMatches();
+  } catch (_) {}
+}
+
+// ─── Scoring Helpers ──────────────────────────────────────────────────────────
+
+function calcMaxPts(s) {
+  return (s.pts_groups || 0) + (s.pts_r16 || 0) + (s.pts_qf || 0) +
+         (s.pts_sf || 0) + (s.pts_runner_up || 0) + (s.pts_champion || 0);
+}
+
+function calcTeamPoints(stage) {
+  if (!stage || stage === 'GROUP') return 0;
+  const s = settingsData;
+  const g = s.pts_groups || 0;
+  const vals = {
+    R32:    g,
+    R16:    g + (s.pts_r16 || 0),
+    QF:     g + (s.pts_r16 || 0) + (s.pts_qf || 0),
+    SF:     g + (s.pts_r16 || 0) + (s.pts_qf || 0) + (s.pts_sf || 0),
+    FINAL:  g + (s.pts_r16 || 0) + (s.pts_qf || 0) + (s.pts_sf || 0) + (s.pts_runner_up || 0),
+    WINNER: calcMaxPts(s),
+  };
+  return vals[stage] ?? 0;
+}
+
+function renderScoringTable() {
+  const el = document.getElementById('rulesScoring');
+  if (!el) return;
+  const s = settingsData;
+  const g   = s.pts_groups    || 0;
+  const r16 = s.pts_r16       || 0;
+  const qf  = s.pts_qf        || 0;
+  const sf  = s.pts_sf        || 0;
+  const ru  = s.pts_runner_up || 0;
+  const ch  = s.pts_champion  || 0;
+
+  const rows = [
+    { label: 'Eliminated in Group Stage',  bonus: 0,  total: 0,                   cls: 'muted' },
+    { label: 'Survived Groups (reach R32)', bonus: g,  total: g,                   cls: g > 0 ? '' : 'muted' },
+    { label: 'Reached Round of 16',        bonus: r16, total: g + r16,             cls: '' },
+    { label: 'Reached Quarterfinals',      bonus: qf,  total: g + r16 + qf,        cls: '' },
+    { label: 'Reached Semifinals',         bonus: sf,  total: g + r16 + qf + sf,   cls: '' },
+    { label: 'Runner-up',                  bonus: ru,  total: g + r16 + qf + sf + ru, cls: '' },
+    { label: '🏆 Champion',               bonus: ch,  total: calcMaxPts(s),        cls: 'gold', highlight: true },
+  ];
+
+  el.innerHTML = rows.map(r => `
+    <div class="score-row ${r.highlight ? 'highlight' : ''}">
+      <span>${r.label}</span>
+      <div class="score-row-pts">
+        ${r.bonus > 0 ? `<span class="pts-bonus">+${r.bonus}</span>` : '<span class="pts-bonus muted">+0</span>'}
+        <span class="pts-total ${r.cls}">${r.total} pts total</span>
+      </div>
+    </div>`).join('');
+}
+
+function updateSettingsMaxPts() {
+  const el = document.getElementById('settingsMaxPts');
+  if (el) el.textContent = calcMaxPts(settingsData) + ' pts';
+}
+
+// ─── Rendering ────────────────────────────────────────────────────────────────
+
+function renderLeaderboard() {
+  const el = document.getElementById('leaderboard');
+
+  if (!leaderboardData.length) {
+    el.innerHTML = `
+      <div class="empty-state">
+        <div class="big-icon">👥</div>
+        <p>No players yet. Add one to get started!</p>
+      </div>`;
+    return;
+  }
+
+  // Only show medals once at least one player has points
+  const hasPoints = leaderboardData.some(p => p.totalPoints > 0);
+
+  // If no one has points yet, show in order they were added (server sorts by id asc when all 0)
+  const displayData = hasPoints
+    ? leaderboardData
+    : [...leaderboardData].sort((a, b) => a.id - b.id);
+
+  el.innerHTML = displayData.map((player, i) => {
+    const rank = i + 1;
+    const showMedal = hasPoints && rank <= 3;
+    const rankClass = showMedal ? `rank-${rank}` : '';
+    const rankLabel = showMedal ? ['🥇','🥈','🥉'][rank-1] : rank;
+
+    const teamChips = player.teams.map(t => `
+      <span class="team-chip stage-${t.stage || ''}"
+            onclick="openUnassign(${player.id}, '${t.code}', '${escHtml(t.name)}')"
+            title="Click to remove ${escHtml(t.name)}">
+        ${t.flag} ${escHtml(t.name)}
+        ${t.stage ? `<span class="chip-pts">${t.points}pts</span>` : ''}
+      </span>`).join('');
+
+    return `
+      <div class="player-card ${rankClass}">
+        <div class="player-rank">${rankLabel}</div>
+        <div class="player-info">
+          <div class="player-name">${escHtml(player.name)}</div>
+          <div class="player-teams">
+            ${teamChips}
+            <span class="add-team-chip" onclick="openAssignForPlayer(${player.id})">+ Team</span>
+          </div>
+        </div>
+        <div>
+          <div class="player-points">${player.totalPoints}</div>
+          <div class="player-pts-label">pts</div>
+        </div>
+        <div class="player-actions">
+          <button class="icon-btn" onclick="removePlayer(${player.id}, '${escHtml(player.name)}')" title="Remove player">🗑</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function renderTeams() {
+  const el = document.getElementById('teamsGrid');
+  if (!teamsData.length) { el.innerHTML = ''; return; }
+
+  const onlyAvailable = activeFilter === 'available';
+  const groups = ['A','B','C','D','E','F','G','H','I','J','K','L'];
+
+  // Bucket teams by group
+  const byGroup = {};
+  for (const g of groups) byGroup[g] = [];
+  for (const t of teamsData) {
+    const g = t.group_name || '?';
+    if (!byGroup[g]) byGroup[g] = [];
+    byGroup[g].push(t);
+  }
+
+  let html = '';
+  for (const g of groups) {
+    const teams = byGroup[g] || [];
+    const visible = onlyAvailable ? teams.filter(t => !t.claimed_by) : teams;
+    if (!visible.length) continue;
+
+    html += `<div class="group-section">
+      <div class="group-header">Group ${g}</div>
+      <div class="group-teams">${visible.map(renderTeamCard).join('')}</div>
+    </div>`;
+  }
+
+  el.innerHTML = html || `<div class="empty-state"><div class="big-icon">✅</div><p>All teams have been claimed!</p></div>`;
+}
+
+function renderTeamCard(t) {
+  const isClaimed = !!t.claimed_by;
+  const stageLabel = t.stage ? STAGE_LABELS[t.stage] : '';
+  const pts = calcTeamPoints(t.stage);
+  return `
+    <div class="team-card ${isClaimed ? 'claimed' : ''}"
+         onclick="handleTeamClick('${t.code}', ${isClaimed}, ${t.claimed_by_id || 'null'})"
+         title="${isClaimed ? `${escHtml(t.claimed_by)}'s team — click to unassign` : 'Click to assign to a player'}">
+      ${t.stage ? `<span class="team-card-stage stage-${t.stage}">${stageLabel}</span>` : ''}
+      <div class="team-card-flag">${t.flag}</div>
+      <div class="team-card-name">${escHtml(t.name)}</div>
+      <div class="team-card-code">${t.code}</div>
+      ${pts > 0 ? `<div class="team-card-pts">${pts} pts</div>` : ''}
+      ${isClaimed ? `<div class="team-card-claimed">→ ${escHtml(t.claimed_by)}</div>` : ''}
+    </div>`;
+}
+
+function applyFilter(filter) {
+  activeFilter = filter;
+  document.querySelectorAll('.filter-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.filter === filter);
+  });
+  renderTeams();
+}
+
+// ─── Player Actions ───────────────────────────────────────────────────────────
+
+function openAddPlayer() {
+  openModal('addPlayerModal');
+  document.getElementById('playerNameInput').value = '';
+  setTimeout(() => document.getElementById('playerNameInput').focus(), 50);
+}
+
+async function submitAddPlayer() {
+  const name = document.getElementById('playerNameInput').value.trim();
+  if (!name) return;
+  const res = await fetch('/api/players', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name }) });
+  const data = await res.json();
+  if (!res.ok) { showToast(data.error, 'error'); return; }
+  closeModal('addPlayerModal');
+  showToast(`${name} added!`, 'success');
+  await loadAll();
+}
+
+async function removePlayer(id, name) {
+  if (!confirm(`Remove ${name} and all their teams?`)) return;
+  await fetch(`/api/players/${id}`, { method: 'DELETE' });
+  showToast(`${name} removed`, 'success');
+  await loadAll();
+}
+
+// ─── Team Assignment ──────────────────────────────────────────────────────────
+
+function handleTeamClick(teamCode, isClaimed, claimedById) {
+  if (isClaimed) {
+    const team = teamsData.find(t => t.code === teamCode);
+    openUnassign(claimedById, teamCode, team?.name || teamCode);
+  } else {
+    openAssign(teamCode);
+  }
+}
+
+function openAssign(teamCode) {
+  const team = teamsData.find(t => t.code === teamCode);
+  pendingAssignTeamCode = teamCode;
+  document.getElementById('assignModalTitle').textContent = `Assign ${team?.flag || ''} ${team?.name || teamCode}`;
+  document.getElementById('assignModalSub').textContent = 'Choose a player to assign this team to:';
+  const select = document.getElementById('assignPlayerSelect');
+  if (!leaderboardData.length) { showToast('Add a player first', 'error'); return; }
+  select.innerHTML = leaderboardData.map(p => `<option value="${p.id}">${escHtml(p.name)}</option>`).join('');
+  openModal('assignModal');
+}
+
+function openAssignForPlayer(playerId) {
+  const availableTeams = teamsData.filter(t => !t.claimed_by);
+  if (!availableTeams.length) { showToast('No teams available', 'error'); return; }
+  const player = leaderboardData.find(p => p.id === playerId);
+  document.getElementById('assignModalTitle').textContent = `Add Team for ${player?.name || ''}`;
+  document.getElementById('assignModalSub').textContent = 'Choose an available team:';
+  const select = document.getElementById('assignPlayerSelect');
+  select.innerHTML = availableTeams.map(t => `<option value="${t.code}">${t.flag} ${escHtml(t.name)}</option>`).join('');
+  pendingAssignTeamCode = '__by_player__';
+  select.dataset.playerId = playerId;
+  openModal('assignModal');
+}
+
+async function submitAssign() {
+  const select = document.getElementById('assignPlayerSelect');
+  let playerId, teamCode;
+  if (pendingAssignTeamCode === '__by_player__') {
+    playerId = select.dataset.playerId;
+    teamCode = select.value;
+  } else {
+    teamCode = pendingAssignTeamCode;
+    playerId = select.value;
+  }
+  const res = await fetch(`/api/players/${playerId}/teams`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ teamCode })
+  });
+  const data = await res.json();
+  if (!res.ok) { showToast(data.error, 'error'); return; }
+  const team = teamsData.find(t => t.code === teamCode);
+  const player = leaderboardData.find(p => p.id == playerId);
+  closeModal('assignModal');
+  showToast(`${team?.flag} ${team?.name} → ${player?.name}`, 'success');
+  await loadAll();
+}
+
+function openUnassign(playerId, teamCode, teamName) {
+  const player = leaderboardData.find(p => p.id === playerId);
+  const team = teamsData.find(t => t.code === teamCode);
+  pendingUnassign = { playerId, teamCode, teamName };
+  document.getElementById('unassignTitle').textContent = `Remove ${team?.flag || ''} ${teamName}?`;
+  document.getElementById('unassignSub').textContent = `Remove ${teamName} from ${player?.name || 'this player'}?`;
+  openModal('unassignModal');
+}
+
+async function submitUnassign() {
+  if (!pendingUnassign) return;
+  const { playerId, teamCode, teamName } = pendingUnassign;
+  await fetch(`/api/players/${playerId}/teams/${teamCode}`, { method: 'DELETE' });
+  closeModal('unassignModal');
+  showToast(`${teamName} unassigned`, 'success');
+  pendingUnassign = null;
+  await loadAll();
+}
+
+// ─── Settings ─────────────────────────────────────────────────────────────────
+
+function openSettings() {
+  const s = settingsData;
+  document.getElementById('s_r16_bonus').value = s.pts_groups    ?? 5;
+  document.getElementById('s_r16').value       = s.pts_r16       ?? 10;
+  document.getElementById('s_qf').value        = s.pts_qf        ?? 10;
+  document.getElementById('s_sf').value        = s.pts_sf        ?? 10;
+  document.getElementById('s_runner_up').value = s.pts_runner_up ?? 10;
+  document.getElementById('s_champion').value  = s.pts_champion  ?? 10;
+  updateSettingsPreview();
+
+  ['s_r16_bonus','s_r16','s_qf','s_sf','s_runner_up','s_champion'].forEach(id => {
+    document.getElementById(id).oninput = updateSettingsPreview;
+  });
+
+  openModal('settingsModal');
+}
+
+function updateSettingsPreview() {
+  const preview = {
+    pts_groups:    parseInt(document.getElementById('s_r16_bonus').value) || 0,
+    pts_r16:       parseInt(document.getElementById('s_r16').value)       || 0,
+    pts_qf:        parseInt(document.getElementById('s_qf').value)        || 0,
+    pts_sf:        parseInt(document.getElementById('s_sf').value)        || 0,
+    pts_runner_up: parseInt(document.getElementById('s_runner_up').value) || 0,
+    pts_champion:  parseInt(document.getElementById('s_champion').value)  || 0,
+  };
+  const el = document.getElementById('settingsMaxPts');
+  if (el) el.textContent = calcMaxPts(preview) + ' pts';
+}
+
+async function saveSettings() {
+  const payload = {
+    pts_groups:    parseInt(document.getElementById('s_r16_bonus').value) || 0,
+    pts_r16:       parseInt(document.getElementById('s_r16').value)       || 0,
+    pts_qf:        parseInt(document.getElementById('s_qf').value)        || 0,
+    pts_sf:        parseInt(document.getElementById('s_sf').value)        || 0,
+    pts_runner_up: parseInt(document.getElementById('s_runner_up').value) || 0,
+    pts_champion:  parseInt(document.getElementById('s_champion').value)  || 0,
+  };
+  const res = await fetch('/api/settings', {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  const data = await res.json();
+  if (!res.ok) { showToast(data.error || 'Failed to save', 'error'); return; }
+  settingsData = data.settings;
+  renderScoringTable();
+  updateSettingsMaxPts();
+  closeModal('settingsModal');
+  showToast('Scoring updated!', 'success');
+  await loadLeaderboard();
+}
+
+// ─── Schedule ─────────────────────────────────────────────────────────────────
+
+function renderMatches() {
+  const el = document.getElementById('matchesList');
+  if (!el || !matchesData.length) return;
+
+  let filtered = [...matchesData];
+  if (matchFilter === 'upcoming') {
+    filtered = filtered.filter(m => ['SCHEDULED','TIMED','IN_PLAY','PAUSED'].includes(m.status));
+  } else if (matchFilter === 'finished') {
+    filtered = filtered.filter(m => m.status === 'FINISHED').reverse();
+  }
+
+  if (!filtered.length) {
+    el.innerHTML = `<div class="empty-state"><p>No ${matchFilter} matches</p></div>`;
+    return;
+  }
+
+  // Group by local date
+  const byDate = new Map();
+  for (const m of filtered) {
+    const key = new Date(m.utcDate).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+    if (!byDate.has(key)) byDate.set(key, []);
+    byDate.get(key).push(m);
+  }
+
+  el.innerHTML = [...byDate.entries()].map(([date, matches]) => `
+    <div class="match-day">
+      <div class="match-day-header">${date}</div>
+      ${matches.map(renderMatchRow).join('')}
+    </div>`).join('');
+}
+
+function renderMatchRow(m) {
+  const home = m.homeTeam;
+  const away = m.awayTeam;
+  const homeTeam = teamsData.find(t => t.code === home?.tla) || {};
+  const awayTeam = teamsData.find(t => t.code === away?.tla) || {};
+  const homeFlag = homeTeam.flag || '';
+  const awayFlag = awayTeam.flag || '';
+
+  const isFinished = m.status === 'FINISHED';
+  const isLive = m.status === 'IN_PLAY' || m.status === 'PAUSED';
+  const localTime = new Date(m.utcDate).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  const stageLabel = m.stage?.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, c => c.toUpperCase()) || '';
+
+  let center;
+  if (isFinished) {
+    center = `<span class="match-score">${m.score?.fullTime?.home ?? '?'} – ${m.score?.fullTime?.away ?? '?'}</span>`;
+  } else if (isLive) {
+    center = `<span class="match-score live">● LIVE</span>`;
+  } else {
+    center = `<span class="match-time">${localTime}</span>`;
+  }
+
+  const homeOwner = home?.tla ? leaderboardData.find(p => p.teams.some(t => t.code === home.tla)) : null;
+  const awayOwner = away?.tla ? leaderboardData.find(p => p.teams.some(t => t.code === away.tla)) : null;
+
+  return `
+    <div class="match-row ${isLive ? 'match-live' : ''}">
+      <div class="match-team match-home">
+        <span class="match-flag">${homeFlag}</span>
+        <span class="match-name">${home?.name || '?'}</span>
+        ${homeOwner ? `<span class="match-owner">${escHtml(homeOwner.name)}</span>` : ''}
+      </div>
+      <div class="match-center">
+        ${center}
+        <div class="match-stage">${stageLabel}</div>
+      </div>
+      <div class="match-team match-away">
+        ${awayOwner ? `<span class="match-owner">${escHtml(awayOwner.name)}</span>` : ''}
+        <span class="match-name">${away?.name || '?'}</span>
+        <span class="match-flag">${awayFlag}</span>
+      </div>
+    </div>`;
+}
+
+// ─── Sync ─────────────────────────────────────────────────────────────────────
+
+async function triggerSync() {
+  const btn = document.getElementById('syncBtn');
+  btn.textContent = '⏳ Syncing...';
+  btn.disabled = true;
+  try {
+    const res = await fetch('/api/sync', { method: 'POST' });
+    const data = await res.json();
+    if (res.ok) { showToast('Scores synced!', 'success'); await loadAll(); }
+    else showToast(data.error || 'Sync failed', 'error');
+  } finally {
+    btn.textContent = '🔄 Sync';
+    btn.disabled = false;
+  }
+}
+
+// ─── Modals ───────────────────────────────────────────────────────────────────
+
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function openRules() { openModal('rulesModal'); }
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open'));
+  if (e.key === 'Enter' && document.getElementById('addPlayerModal').classList.contains('open')) submitAddPlayer();
+});
+
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('open'); });
+});
+
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => applyFilter(btn.dataset.filter));
+});
+
+document.querySelectorAll('.match-filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    matchFilter = btn.dataset.mfilter;
+    document.querySelectorAll('.match-filter-btn').forEach(b => b.classList.toggle('active', b === btn));
+    renderMatches();
+  });
+});
+
+// ─── Toast ────────────────────────────────────────────────────────────────────
+
+let toastTimer;
+function showToast(msg, type = '') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = `toast ${type} show`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function escHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Auto-refresh every 60 seconds
+setInterval(loadAll, 60_000);
+
+// Boot
+loadAll();

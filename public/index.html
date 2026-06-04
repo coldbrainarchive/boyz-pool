@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Boyz Pool ⚽</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="header-title">
+      <span class="trophy">⚽</span>
+      <div>
+        <h1>The Boyz Pool</h1>
+        <p class="subtitle">2026 FIFA World Cup</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-ghost" onclick="openRules()">📋 Rules</button>
+      <button class="btn btn-ghost" onclick="openSettings()">⚙️ Scoring</button>
+      <button class="btn btn-ghost" onclick="triggerSync()" id="syncBtn">🔄 Sync</button>
+      <span class="last-updated" id="lastUpdated"></span>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- Leaderboard -->
+  <section class="section">
+    <div class="section-header">
+      <h2>🏆 Leaderboard</h2>
+      <button class="btn btn-primary" onclick="openAddPlayer()">+ Add Player</button>
+    </div>
+    <div id="leaderboard" class="leaderboard"></div>
+  </section>
+
+  <!-- Teams Grid -->
+  <section class="section">
+    <div class="section-header">
+      <h2>🌍 All Teams</h2>
+      <div class="filter-row">
+        <button class="filter-btn active" data-filter="all">All Groups</button>
+        <button class="filter-btn" data-filter="available">🟢 Available Only</button>
+      </div>
+    </div>
+    <div id="teamsGrid" class="teams-grid"></div>
+  </section>
+
+  <!-- Schedule -->
+  <section class="section" id="scheduleSection" style="display:none">
+    <div class="section-header">
+      <h2>📅 Schedule</h2>
+      <div class="filter-row">
+        <button class="match-filter-btn active" data-mfilter="upcoming">Upcoming</button>
+        <button class="match-filter-btn" data-mfilter="finished">Results</button>
+        <button class="match-filter-btn" data-mfilter="all">All</button>
+      </div>
+    </div>
+    <div id="matchesList"></div>
+  </section>
+</main>
+
+<!-- Add Player Modal -->
+<div class="modal-overlay" id="addPlayerModal">
+  <div class="modal">
+    <h3>Add Player</h3>
+    <input type="text" id="playerNameInput" placeholder="Enter name..." class="modal-input" maxlength="40" />
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('addPlayerModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="submitAddPlayer()">Add</button>
+    </div>
+  </div>
+</div>
+
+<!-- Assign Team Modal -->
+<div class="modal-overlay" id="assignModal">
+  <div class="modal">
+    <h3 id="assignModalTitle">Assign Team</h3>
+    <p id="assignModalSub" class="modal-sub"></p>
+    <select id="assignPlayerSelect" class="modal-input"></select>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('assignModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="submitAssign()">Assign</button>
+    </div>
+  </div>
+</div>
+
+<!-- Unassign Confirm Modal -->
+<div class="modal-overlay" id="unassignModal">
+  <div class="modal">
+    <h3 id="unassignTitle">Remove Team?</h3>
+    <p id="unassignSub" class="modal-sub"></p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('unassignModal')">Cancel</button>
+      <button class="btn btn-danger" onclick="submitUnassign()">Remove</button>
+    </div>
+  </div>
+</div>
+
+<!-- Rules Modal -->
+<div class="modal-overlay" id="rulesModal">
+  <div class="modal modal-wide">
+    <h3>⚽ The Boyz Pool — Rules</h3>
+    <ul class="rules-list">
+      <li>Entry fee: <strong>$10 per person</strong></li>
+      <li>Each player picks <strong>8 teams</strong> from the 48 in the tournament</li>
+      <li>Teams are first-come, first-served — once picked, no one else can take it</li>
+      <li>Teams can be swapped between players before the tournament starts</li>
+      <li>Once the tournament begins, all picks are final</li>
+      <li>The player with the <strong>most total points wins</strong> — points add up across all 8 of your teams</li>
+      <li>Tiebreaker: whoever has a team that went furthest in the tournament wins</li>
+    </ul>
+    <h4>Scoring — Points earned per team</h4>
+    <div class="scoring-table" id="rulesScoring"></div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" onclick="closeModal('rulesModal')">Got it</button>
+    </div>
+  </div>
+</div>
+
+<!-- Settings Modal -->
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal modal-wide">
+    <h3>⚙️ Customize Scoring</h3>
+    <p class="modal-sub">Points earned when a team reaches each stage. Changes affect all scores immediately.</p>
+    <div class="settings-grid">
+      <div class="settings-row settings-static-row">
+        <label>Eliminated in Group Stage</label>
+        <div class="settings-static-val">0 pts — fixed</div>
+      </div>
+      <div class="settings-row">
+        <label>Survived Groups (reach R32)</label>
+        <div class="settings-input-wrap"><span class="pts-prefix">+</span><input type="number" id="s_r16_bonus" min="0" max="999" class="pts-input" /><span class="pts-suffix">pts</span></div>
+      </div>
+      <div class="settings-row">
+        <label>Reached Round of 16</label>
+        <div class="settings-input-wrap"><span class="pts-prefix">+</span><input type="number" id="s_r16" min="0" max="999" class="pts-input" /><span class="pts-suffix">pts</span></div>
+      </div>
+      <div class="settings-row">
+        <label>Reached Quarterfinals</label>
+        <div class="settings-input-wrap"><span class="pts-prefix">+</span><input type="number" id="s_qf" min="0" max="999" class="pts-input" /><span class="pts-suffix">pts</span></div>
+      </div>
+      <div class="settings-row">
+        <label>Reached Semifinals</label>
+        <div class="settings-input-wrap"><span class="pts-prefix">+</span><input type="number" id="s_sf" min="0" max="999" class="pts-input" /><span class="pts-suffix">pts</span></div>
+      </div>
+      <div class="settings-row">
+        <label>Runner-up</label>
+        <div class="settings-input-wrap"><span class="pts-prefix">+</span><input type="number" id="s_runner_up" min="0" max="999" class="pts-input" /><span class="pts-suffix">pts</span></div>
+      </div>
+      <div class="settings-row highlight-row">
+        <label>🏆 Champion</label>
+        <div class="settings-input-wrap"><span class="pts-prefix">+</span><input type="number" id="s_champion" min="0" max="999" class="pts-input" /><span class="pts-suffix">pts</span></div>
+      </div>
+    </div>
+    <div class="settings-max-note">Max possible points per team: <strong id="settingsMaxPts">—</strong></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('settingsModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveSettings()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
