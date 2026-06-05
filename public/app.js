@@ -755,7 +755,9 @@ function openDraftSettings() {
     for (let r = 0; r < Math.min(DRAFT_ROUNDS, 3); r++) {
       const rev = r % 2 === 1;
       const row = rev ? [...ordered].reverse() : ordered;
-      html += `<div class="draft-round-row"><span class="draft-round-num">R${r+1}</span>${row.map(p => `<span class="draft-round-chip">${escHtml(p.name)}</span>`).join('<span class="draft-arrow">${rev ? '←' : '→'}</span>')}</div>`;
+      const arrow = rev ? '&larr;' : '&rarr;';
+      const sep = `<span class="draft-arrow">${arrow}</span>`;
+      html += `<div class="draft-round-row"><span class="draft-round-num">R${r+1}</span>${row.map(p => `<span class="draft-round-chip">${escHtml(p.name)}</span>`).join(sep)}</div>`;
     }
     html += `<div class="draft-round-row muted">...continues for ${DRAFT_ROUNDS} rounds total</div>`;
     preview.innerHTML = html;
