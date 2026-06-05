@@ -600,6 +600,25 @@ async function submitUnassign() {
 
 // ─── Settings ─────────────────────────────────────────────────────────────────
 
+function openSettingsAuth() {
+  document.getElementById('settingsPasswordInput').value = '';
+  document.getElementById('settingsAuthError').style.display = 'none';
+  openModal('settingsAuthModal');
+  setTimeout(() => document.getElementById('settingsPasswordInput').focus(), 50);
+}
+
+function submitSettingsPassword() {
+  const input = document.getElementById('settingsPasswordInput');
+  if (input.value === 'Netherlands121') {
+    closeModal('settingsAuthModal');
+    setTimeout(openSettings, 220);
+  } else {
+    document.getElementById('settingsAuthError').style.display = '';
+    input.value = '';
+    input.focus();
+  }
+}
+
 function openSettings() {
   const s = settingsData;
   document.getElementById('s_r16_bonus').value   = s.pts_groups    ?? 5;

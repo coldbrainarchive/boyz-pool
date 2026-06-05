@@ -150,6 +150,21 @@
 </div>
 
 <!-- Settings Modal -->
+<!-- Settings Password Modal -->
+<div class="modal-overlay" id="settingsAuthModal">
+  <div class="modal">
+    <h3>🔐 Enter Password</h3>
+    <p class="modal-sub">Required to access settings.</p>
+    <input type="password" id="settingsPasswordInput" class="modal-input" placeholder="Password"
+           onkeydown="if(event.key==='Enter')submitSettingsPassword()" style="margin-top:12px" />
+    <p id="settingsAuthError" style="color:var(--red);font-size:13px;margin-top:8px;display:none">Incorrect password</p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('settingsAuthModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="submitSettingsPassword()">Unlock</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="settingsModal">
   <div class="modal modal-wide">
     <h3>⚙️ Customize Scoring</h3>
@@ -267,7 +282,7 @@
         <span class="menu-item-label">Rules</span>
         <span class="menu-item-arrow">›</span>
       </button>
-      <button class="menu-item" onclick="menuAction(openSettings)">
+      <button class="menu-item" onclick="menuAction(openSettingsAuth)">
         <span class="menu-item-icon">⚙️</span>
         <span class="menu-item-label">Customize Scoring</span>
         <span class="menu-item-arrow">›</span>
