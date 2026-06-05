@@ -265,7 +265,7 @@ function renderLeaderboard() {
     const rankClass = showMedal ? `rank-${rank}` : '';
     const rankLabel = showMedal ? ['🥇','🥈','🥉'][rank-1] : rank;
 
-    const isOnClock = draftState?.active && draftState.current_player_id === player.id;
+    const isOnClock = draftState?.active && String(draftState.current_player_id) === String(player.id);
     const draftClass = isOnClock ? 'on-the-clock' : (draftState?.active ? 'draft-waiting' : '');
     const timerStr = isOnClock && draftState.timer_enabled && draftState.time_remaining != null
       ? formatTimer(draftState.time_remaining) : '';
@@ -677,11 +677,9 @@ function renderDraftBanner() {
   const isRev  = Math.floor(pick / n) % 2 === 1;
   const total  = n * DRAFT_ROUNDS;
 
-  const player = leaderboardData.find(p => p.id === draftState.current_player_id);
-
   document.getElementById('draftBannerRound').textContent = `Round ${round} · ${isRev ? '← Snake' : '→ Forward'} 🐍`;
   document.getElementById('draftBannerPick').textContent  = `Pick ${pick + 1} of ${total}`;
-  document.getElementById('draftBannerName').textContent  = player?.name || '?';
+  document.getElementById('draftBannerName').textContent  = draftState.current_player_name || '—';
 
   const timerEl = document.getElementById('draftBannerTimer');
   timerEl.style.display = draftState.timer_enabled ? '' : 'none';
