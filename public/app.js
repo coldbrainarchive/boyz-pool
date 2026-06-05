@@ -119,6 +119,33 @@ function renderActivity() {
   }
 
   el.innerHTML = activityEntries.map(e => {
+    if (e.action === 'trade') {
+      const statusLabel = e.status === 'approved'
+        ? '<span class="activity-action assigned">approved</span>'
+        : e.status === 'rejected'
+        ? '<span class="activity-action removed">rejected</span>'
+        : e.status === 'cancelled'
+        ? '<span class="activity-action removed">withdrawn</span>'
+        : '<span class="activity-action trade-pending">proposed</span>';
+      const responseNote = e.status === 'pending' && e.receiver_response
+        ? `<span class="activity-trade-response ${e.receiver_response}">${e.receiver_response === 'accepted' ? '✓ accepted' : '✗ declined'} by ${escHtml(e.receiver_name)}</span>`
+        : '';
+      const offerStr = e.offer_teams.map(code => getTeamDisplay(code)).join(', ');
+      const reqStr = e.request_teams.map(code => getTeamDisplay(code)).join(', ');
+      return `
+        <div class="activity-row">
+          <span class="activity-flag">🔄</span>
+          <div class="activity-text">
+            <span class="activity-player">${escHtml(e.proposer_name)}</span>
+            ${statusLabel}
+            <span class="activity-action" style="color:var(--muted)">trade with</span>
+            <span class="activity-player">${escHtml(e.receiver_name)}</span>
+            <span class="activity-trade-teams">${offerStr} ⇄ ${reqStr}</span>
+            ${responseNote}
+          </div>
+          <span class="activity-time">${timeAgo(e.created_at)}</span>
+        </div>`;
+    }
     if (e.action === 'stage_advance') {
       const label = STAGE_ADVANCE_LABELS[e.stage] || e.stage;
       const pts = calcTeamPoints(e.stage);
