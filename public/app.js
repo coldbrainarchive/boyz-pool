@@ -725,6 +725,15 @@ function openModal(id) { document.getElementById(id).classList.add('open'); }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 function openRules() { openModal('rulesModal'); }
 function openMenu() { openModal('menuModal'); }
+
+function exportBackup() {
+  closeModal('menuModal');
+  const a = document.createElement('a');
+  a.href = '/api/backup';
+  a.download = '';
+  a.click();
+  showToast('Downloading backup…', 'success');
+}
 // Close menu then open next modal after animation finishes
 function menuAction(fn) { closeModal('menuModal'); setTimeout(fn, 220); }
 
