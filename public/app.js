@@ -600,7 +600,7 @@ async function submitUnassign() {
 
 // ─── Settings ─────────────────────────────────────────────────────────────────
 
-function openSettingsAuth() {
+function openMenuAuth() {
   document.getElementById('settingsPasswordInput').value = '';
   document.getElementById('settingsAuthError').style.display = 'none';
   openModal('settingsAuthModal');
@@ -611,7 +611,7 @@ function submitSettingsPassword() {
   const input = document.getElementById('settingsPasswordInput');
   if (input.value === 'Netherlands121') {
     closeModal('settingsAuthModal');
-    setTimeout(openSettings, 220);
+    setTimeout(openMenu, 220);
   } else {
     document.getElementById('settingsAuthError').style.display = '';
     input.value = '';
