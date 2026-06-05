@@ -680,6 +680,141 @@ select.modal-input option { background: var(--surface); }
   white-space: nowrap;
 }
 
+/* ─── Draft ──────────────────────────────────────────────────────────────── */
+
+/* Draft banner */
+.draft-banner {
+  background: linear-gradient(135deg, rgba(167,139,250,0.15) 0%, rgba(61,139,255,0.1) 100%);
+  border: 1px solid rgba(167,139,250,0.4);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  text-align: center;
+}
+.draft-banner-top {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+.draft-banner-middle {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.draft-on-clock {
+  color: #a78bfa;
+  font-size: 20px;
+  font-weight: 900;
+}
+.draft-clock-label { color: var(--muted); margin-left: 6px; }
+.draft-banner-timer {
+  font-size: 28px;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  color: var(--gold);
+  letter-spacing: 2px;
+  margin-top: 4px;
+}
+
+/* Player card draft states */
+.player-card.on-the-clock {
+  border-color: #a78bfa;
+  background: linear-gradient(135deg, rgba(167,139,250,0.12) 0%, var(--surface) 60%);
+  box-shadow: 0 0 0 2px rgba(167,139,250,0.25);
+}
+.player-card.draft-waiting { opacity: 0.6; }
+
+/* On the clock badge + timer next to name */
+.draft-clock-badge {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: #a78bfa;
+  color: #0d0d1a;
+  padding: 2px 6px;
+  border-radius: 6px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+.draft-live-timer {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--gold);
+  margin-left: 6px;
+  letter-spacing: 1px;
+}
+
+/* Draft settings modal */
+.draft-order-preview {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  margin-bottom: 4px;
+  max-height: 120px;
+  overflow-y: auto;
+}
+.draft-round-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 6px;
+  font-size: 12px;
+}
+.draft-round-row.muted { color: var(--muted); font-style: italic; }
+.draft-round-num {
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--muted);
+  min-width: 24px;
+}
+.draft-round-chip {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1px 8px;
+  font-weight: 600;
+}
+.draft-arrow { color: var(--muted); font-size: 10px; }
+.draft-pick-hint {
+  font-size: 12px;
+  color: var(--accent);
+  text-align: right;
+  margin-top: -4px;
+  margin-bottom: 8px;
+}
+
+/* Toggle switch */
+.toggle-wrap { display: flex; align-items: center; cursor: pointer; }
+.toggle-track {
+  width: 44px; height: 24px;
+  background: var(--border);
+  border-radius: 12px;
+  position: relative;
+  transition: background 0.2s;
+}
+input[type=checkbox]:checked + .toggle-track { background: var(--accent); }
+.toggle-thumb {
+  position: absolute;
+  top: 3px; left: 3px;
+  width: 18px; height: 18px;
+  background: white;
+  border-radius: 50%;
+  transition: transform 0.2s;
+}
+input[type=checkbox]:checked + .toggle-track .toggle-thumb { transform: translateX(20px); }
+.toggle-wrap input[type=checkbox] { display: none; }
+
 /* Activity collapsible header */
 .collapsible-header { user-select: none; }
 .collapsible-header:active { opacity: 0.7; }

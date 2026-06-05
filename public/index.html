@@ -33,6 +33,19 @@
       <h2>🏆 Leaderboard</h2>
       <button class="btn btn-primary" onclick="openAddPlayer()">+ Add Player</button>
     </div>
+    <!-- Draft banner (shown when draft is active) -->
+    <div id="draftBanner" class="draft-banner" style="display:none">
+      <div class="draft-banner-top">
+        <span id="draftBannerRound" class="draft-round-label">Round 2 · Snake 🐍</span>
+        <span id="draftBannerPick" class="draft-pick-label">Pick 7 of 48</span>
+      </div>
+      <div class="draft-banner-middle">
+        <span id="draftBannerName" class="draft-on-clock">—</span>
+        <span class="draft-clock-label">is on the clock</span>
+      </div>
+      <div id="draftBannerTimer" class="draft-banner-timer" style="display:none">—</div>
+    </div>
+
     <div id="leaderboard" class="leaderboard"></div>
 
     <!-- Activity Log (collapsible) -->
@@ -179,6 +192,55 @@
   </div>
 </div>
 
+<!-- Draft Settings Modal -->
+<div class="modal-overlay" id="draftModal">
+  <div class="modal modal-wide">
+    <h3>🐍 Snake Draft</h3>
+    <p class="modal-sub" id="draftStatusLabel">Configure the draft settings below.</p>
+
+    <h4>Draft Order (forward)</h4>
+    <div id="draftOrderPreview" class="draft-order-preview"></div>
+
+    <h4>Start from</h4>
+    <div class="settings-row">
+      <label>Pick number</label>
+      <div class="settings-input-wrap">
+        <input type="number" id="draftPickInput" min="0" max="47" value="6" class="pts-input" style="width:60px" oninput="updateDraftPickLabel()" />
+      </div>
+    </div>
+    <div id="draftPickLabel" class="draft-pick-hint"></div>
+
+    <h4>Timer per turn</h4>
+    <div class="settings-row">
+      <label>Enable timer</label>
+      <label class="toggle-wrap">
+        <input type="checkbox" id="draftTimerToggle" onchange="updateDraftTimerVisibility()" />
+        <span class="toggle-track"><span class="toggle-thumb"></span></span>
+      </label>
+    </div>
+    <div id="draftTimerFields" style="display:none">
+      <div class="settings-row">
+        <label>Hours</label>
+        <div class="settings-input-wrap">
+          <input type="number" id="draftHours" min="0" max="23" value="5" class="pts-input" style="width:60px" />
+        </div>
+      </div>
+      <div class="settings-row">
+        <label>Minutes</label>
+        <div class="settings-input-wrap">
+          <input type="number" id="draftMins" min="0" max="59" value="0" class="pts-input" style="width:60px" />
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-actions" style="flex-direction:column;gap:8px">
+      <button class="btn btn-primary" style="width:100%" onclick="startDraft()">▶ Start Draft</button>
+      <button class="btn btn-danger" style="width:100%" id="stopDraftBtn" onclick="stopDraft()">■ Stop Draft</button>
+      <button class="btn btn-ghost" style="width:100%" onclick="closeModal('draftModal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <!-- Manage Players Modal -->
 <div class="modal-overlay" id="managePlayersModal">
   <div class="modal">
@@ -202,6 +264,11 @@
       <button class="menu-item" onclick="menuAction(openSettings)">
         <span class="menu-item-icon">⚙️</span>
         <span class="menu-item-label">Customize Scoring</span>
+        <span class="menu-item-arrow">›</span>
+      </button>
+      <button class="menu-item" onclick="menuAction(openDraftSettings)">
+        <span class="menu-item-icon">🐍</span>
+        <span class="menu-item-label">Snake Draft</span>
         <span class="menu-item-arrow">›</span>
       </button>
       <button class="menu-item" onclick="openManagePlayers()">

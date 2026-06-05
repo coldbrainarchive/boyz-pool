@@ -11,6 +11,9 @@ let scheduleRefreshTimer = null;
 let pendingPhoto = null;
 let activityExpanded = false;
 let activityEntries = [];
+let draftState = null;
+let draftTimerInterval = null;
+const DRAFT_ROUNDS = 8;
 
 const STAGE_LABELS = {
   GROUP:  'Groups',
@@ -25,7 +28,7 @@ const STAGE_LABELS = {
 // ─── Data Loading ─────────────────────────────────────────────────────────────
 
 async function loadAll() {
-  await Promise.all([loadLeaderboard(), loadTeams(), loadSettings(), loadMatches(), loadActivity()]);
+  await Promise.all([loadLeaderboard(), loadTeams(), loadSettings(), loadMatches(), loadActivity(), loadDraft()]);
 }
 
 async function loadLeaderboard() {
@@ -261,6 +264,11 @@ function renderLeaderboard() {
     const rankClass = showMedal ? `rank-${rank}` : '';
     const rankLabel = showMedal ? ['🥇','🥈','🥉'][rank-1] : rank;
 
+    const isOnClock = draftState?.active && draftState.current_player_id === player.id;
+    const draftClass = isOnClock ? 'on-the-clock' : (draftState?.active ? 'draft-waiting' : '');
+    const timerStr = isOnClock && draftState.timer_enabled && draftState.time_remaining != null
+      ? formatTimer(draftState.time_remaining) : '';
+
     const avatar = player.photo
       ? `<img src="${player.photo}" class="player-avatar" onclick="updatePlayerPhoto(${player.id})" title="Tap to change photo" />`
       : `<div class="player-avatar player-avatar-placeholder" onclick="updatePlayerPhoto(${player.id})" title="Tap to add photo">${escHtml(player.name[0].toUpperCase())}</div>`;
@@ -274,11 +282,15 @@ function renderLeaderboard() {
       </span>`).join('');
 
     return `
-      <div class="player-card ${rankClass}">
+      <div class="player-card ${rankClass} ${draftClass}">
         <div class="player-rank">${rankLabel}</div>
         ${avatar}
         <div class="player-info">
-          <div class="player-name">${escHtml(player.name)}</div>
+          <div class="player-name">
+            ${escHtml(player.name)}
+            ${isOnClock ? `<span class="draft-clock-badge">ON THE CLOCK</span>` : ''}
+            ${timerStr ? `<span class="draft-live-timer">${timerStr}</span>` : ''}
+          </div>
           <div class="player-teams">
             ${teamChips}
             <span class="add-team-chip" onclick="openAssignForPlayer(${player.id})">+ Team</span>
@@ -468,9 +480,13 @@ function handleTeamClick(teamCode) {
   const team = teamsData.find(t => t.code === teamCode);
   if (team?.claimed_by_id) {
     openUnassign(team.claimed_by_id, teamCode, team.name);
-  } else {
-    openAssign(teamCode);
+    return;
   }
+  if (draftState?.active) {
+    assignDraftPick(teamCode);
+    return;
+  }
+  openAssign(teamCode);
 }
 
 function openAssign(teamCode) {
@@ -594,6 +610,239 @@ async function saveSettings() {
   closeModal('settingsModal');
   showToast('Scoring updated!', 'success');
   await loadLeaderboard();
+}
+
+// ─── Draft ────────────────────────────────────────────────────────────────────
+
+async function loadDraft() {
+  try {
+    const res = await fetch('/api/draft');
+    if (!res.ok) return;
+    draftState = await res.json();
+    renderDraftBanner();
+    setupDraftTimer();
+  } catch (_) {}
+}
+
+function draftPlayerAtPick(order, pickNum) {
+  const n = order.length;
+  if (!n) return null;
+  const round = Math.floor(pickNum / n);
+  const pos   = pickNum % n;
+  return order[round % 2 === 1 ? (n - 1 - pos) : pos];
+}
+
+function formatTimer(secs) {
+  const h = Math.floor(secs / 3600);
+  const m = Math.floor((secs % 3600) / 60);
+  const s = Math.floor(secs % 60);
+  return `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+
+function setupDraftTimer() {
+  clearInterval(draftTimerInterval);
+  if (!draftState?.active || !draftState?.timer_enabled || !draftState?.pick_started_at) return;
+
+  draftTimerInterval = setInterval(() => {
+    const elapsed  = (Date.now() - new Date(draftState.pick_started_at + 'Z').getTime()) / 1000;
+    const remaining = Math.max(0, draftState.timer_seconds - elapsed);
+    const str = formatTimer(remaining);
+
+    document.querySelectorAll('.draft-live-timer').forEach(el => el.textContent = str);
+    const bt = document.getElementById('draftBannerTimer');
+    if (bt) bt.textContent = str;
+
+    if (remaining <= 0) {
+      clearInterval(draftTimerInterval);
+      autoAdvanceDraft();
+    }
+  }, 1000);
+}
+
+function renderDraftBanner() {
+  const banner = document.getElementById('draftBanner');
+  if (!banner) return;
+
+  if (!draftState?.active) {
+    banner.style.display = 'none';
+    return;
+  }
+  banner.style.display = '';
+
+  const order  = draftState.player_order;
+  const n      = order.length;
+  const pick   = draftState.pick_number;
+  const round  = Math.floor(pick / n) + 1;
+  const isRev  = Math.floor(pick / n) % 2 === 1;
+  const total  = n * DRAFT_ROUNDS;
+
+  const player = leaderboardData.find(p => p.id === draftState.current_player_id);
+
+  document.getElementById('draftBannerRound').textContent = `Round ${round} · ${isRev ? '← Snake' : '→ Forward'} 🐍`;
+  document.getElementById('draftBannerPick').textContent  = `Pick ${pick + 1} of ${total}`;
+  document.getElementById('draftBannerName').textContent  = player?.name || '?';
+
+  const timerEl = document.getElementById('draftBannerTimer');
+  timerEl.style.display = draftState.timer_enabled ? '' : 'none';
+  if (draftState.timer_enabled && draftState.time_remaining != null) {
+    timerEl.textContent = formatTimer(draftState.time_remaining);
+  }
+}
+
+async function assignDraftPick(teamCode) {
+  if (!draftState?.active || !draftState.current_player_id) return;
+  const playerId = draftState.current_player_id;
+  const team = teamsData.find(t => t.code === teamCode);
+  const player = leaderboardData.find(p => p.id === playerId);
+
+  const res = await fetch(`/api/players/${playerId}/teams`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ teamCode }),
+  });
+  const data = await res.json();
+  if (!res.ok) { showToast(data.error || 'Pick failed', 'error'); return; }
+
+  // Advance draft
+  const advRes = await fetch('/api/draft/advance', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ reason: 'pick', fromPickNumber: draftState.pick_number }),
+  });
+  const advData = await advRes.json();
+
+  if (advData.complete) {
+    showToast('🏆 Draft complete! All picks are in.', 'success');
+  } else {
+    const nextPlayer = leaderboardData.find(p => p.id === advData.current_player_id);
+    const nextMsg = advData.same_player
+      ? ` · ${player?.name} picks again!`
+      : nextPlayer ? ` · Up next: ${nextPlayer.name}` : '';
+    showToast(`${team?.flag} ${team?.name} → ${player?.name}!${nextMsg}`, 'success');
+  }
+
+  await loadDraft();
+  await loadAll();
+}
+
+async function autoAdvanceDraft() {
+  try {
+    const res = await fetch('/api/draft/advance', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reason: 'timeout', fromPickNumber: draftState.pick_number }),
+    });
+    const data = await res.json();
+    if (data.success && !data.skipped) {
+      showToast('⏰ Time\'s up — skipped to next picker', '');
+      await loadDraft();
+      await loadAll();
+    }
+  } catch (_) {}
+}
+
+// ── Draft Settings UI ─────────────────────────────────────────────────────────
+
+function openDraftSettings() {
+  // Build player order from leaderboard (sorted by id = join order)
+  const ordered = [...leaderboardData].sort((a, b) => a.id - b.id);
+
+  // Preview the draft order
+  const preview = document.getElementById('draftOrderPreview');
+  if (preview) {
+    const n = ordered.length;
+    let html = '';
+    for (let r = 0; r < Math.min(DRAFT_ROUNDS, 3); r++) {
+      const rev = r % 2 === 1;
+      const row = rev ? [...ordered].reverse() : ordered;
+      html += `<div class="draft-round-row"><span class="draft-round-num">R${r+1}</span>${row.map(p => `<span class="draft-round-chip">${escHtml(p.name)}</span>`).join('<span class="draft-arrow">${rev ? '←' : '→'}</span>')}</div>`;
+    }
+    html += `<div class="draft-round-row muted">...continues for ${DRAFT_ROUNDS} rounds total</div>`;
+    preview.innerHTML = html;
+  }
+
+  // Pre-fill pick number from active state or default (6 = round 2)
+  const pickInput = document.getElementById('draftPickInput');
+  if (pickInput) pickInput.value = draftState?.pick_number ?? 6;
+  updateDraftPickLabel();
+
+  // Timer toggle
+  const toggle = document.getElementById('draftTimerToggle');
+  if (toggle) { toggle.checked = !!draftState?.timer_enabled; updateDraftTimerVisibility(); }
+
+  // Timer duration
+  const secs = draftState?.timer_seconds ?? 18000;
+  const h = document.getElementById('draftHours');
+  const m = document.getElementById('draftMins');
+  if (h) h.value = Math.floor(secs / 3600);
+  if (m) m.value = Math.floor((secs % 3600) / 60);
+
+  // Show/hide stop button
+  const stopBtn = document.getElementById('stopDraftBtn');
+  if (stopBtn) stopBtn.style.display = draftState?.active ? '' : 'none';
+
+  document.getElementById('draftStatusLabel').textContent = draftState?.active
+    ? `Draft is ACTIVE — currently Pick ${(draftState.pick_number || 0) + 1}`
+    : 'Draft is not active. Configure and press Start.';
+
+  openModal('draftModal');
+}
+
+function updateDraftPickLabel() {
+  const ordered = [...leaderboardData].sort((a, b) => a.id - b.id);
+  const n = ordered.length;
+  const pick = parseInt(document.getElementById('draftPickInput')?.value) || 0;
+  const round = Math.floor(pick / n) + 1;
+  const rev   = Math.floor(pick / n) % 2 === 1;
+  const pos   = pick % n;
+  const idx   = rev ? (n - 1 - pos) : pos;
+  const player = ordered[idx];
+  const el = document.getElementById('draftPickLabel');
+  if (el && player) {
+    el.textContent = `→ Round ${round} (${rev ? 'snake ←' : 'forward →'}), ${player.name}'s turn`;
+  }
+}
+
+function updateDraftTimerVisibility() {
+  const on = document.getElementById('draftTimerToggle')?.checked;
+  const fields = document.getElementById('draftTimerFields');
+  if (fields) fields.style.display = on ? '' : 'none';
+}
+
+async function startDraft() {
+  const ordered    = [...leaderboardData].sort((a, b) => a.id - b.id);
+  const pickNum    = parseInt(document.getElementById('draftPickInput')?.value) || 0;
+  const timerOn    = !!document.getElementById('draftTimerToggle')?.checked;
+  const hours      = parseInt(document.getElementById('draftHours')?.value) || 0;
+  const mins       = parseInt(document.getElementById('draftMins')?.value) || 0;
+  const timerSecs  = (hours * 3600) + (mins * 60) || 18000;
+
+  const res = await fetch('/api/draft/start', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      playerOrder:  ordered.map(p => p.id),
+      timerEnabled: timerOn,
+      timerSeconds: timerSecs,
+      pickNumber:   pickNum,
+    }),
+  });
+  const data = await res.json();
+  if (!res.ok) { showToast(data.error || 'Failed to start', 'error'); return; }
+
+  closeModal('draftModal');
+  showToast('🐍 Draft started!', 'success');
+  await loadDraft();
+  await loadAll();
+}
+
+async function stopDraft() {
+  if (!confirm('Stop the draft? Timer and lock will be removed.')) return;
+  await fetch('/api/draft/stop', { method: 'POST' });
+  closeModal('draftModal');
+  showToast('Draft stopped', '');
+  await loadDraft();
+  await loadAll();
 }
 
 // ─── Tab switching ────────────────────────────────────────────────────────────
