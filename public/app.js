@@ -282,6 +282,9 @@ function renderLeaderboard() {
         ${t.stage ? `<span class="chip-pts">${t.points}pts</span>` : ''}
       </span>`).join('');
 
+    // During draft: only show + Team for current picker
+    const showAddTeam = !draftState?.active || isOnClock;
+
     return `
       <div class="player-card ${rankClass} ${draftClass}">
         <div class="player-rank">${rankLabel}</div>
@@ -294,7 +297,7 @@ function renderLeaderboard() {
           </div>
           <div class="player-teams">
             ${teamChips}
-            <span class="add-team-chip" onclick="openAssignForPlayer(${player.id})">+ Team</span>
+            ${showAddTeam ? `<span class="add-team-chip" onclick="openAssignForPlayer(${player.id})">+ Team</span>` : ''}
           </div>
         </div>
         <div>
@@ -535,6 +538,19 @@ async function submitAssign() {
   const player = leaderboardData.find(p => p.id === parseInt(playerId));
   closeModal('assignModal');
   showToast(`${team?.flag} ${team?.name} → ${player?.name}`, 'success');
+
+  // Advance draft if active and this was the current drafter's pick
+  if (draftState?.active && String(draftState.current_player_id) === String(playerId)) {
+    const advRes = await fetch('/api/draft/advance', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reason: 'pick', fromPickNumber: draftState.pick_number }),
+    });
+    const advData = await advRes.json();
+    if (advData.complete) showToast('🏆 Draft complete!', 'success');
+  }
+
+  await loadDraft();
   await loadAll();
 }
 
