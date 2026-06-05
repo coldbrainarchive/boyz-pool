@@ -41,6 +41,16 @@ CREATE TABLE IF NOT EXISTS draft (
 INSERT OR IGNORE INTO draft (id, active, pick_number, timer_enabled, timer_seconds, player_order)
   VALUES (1, 0, 0, 0, 18000, '[]');
 
+CREATE TABLE IF NOT EXISTS trades (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  proposer_id INTEGER NOT NULL,
+  receiver_id INTEGER NOT NULL,
+  offer_teams TEXT NOT NULL,
+  request_teams TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'pending',
+  created_at TEXT DEFAULT (datetime('now'))
+);
+
 CREATE TABLE IF NOT EXISTS activity_log (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   action TEXT NOT NULL,

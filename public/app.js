@@ -15,6 +15,7 @@ let draftState = null;
 let draftTimerInterval = null;
 let tradeDeadlineInterval = null;
 let draftDirection = 'reverse'; // 'forward' or 'reverse'
+let tradesData = [];
 const DRAFT_ROUNDS = 8;
 
 const STAGE_LABELS = {
@@ -30,7 +31,7 @@ const STAGE_LABELS = {
 // ─── Data Loading ─────────────────────────────────────────────────────────────
 
 async function loadAll() {
-  await Promise.all([loadLeaderboard(), loadTeams(), loadSettings(), loadMatches(), loadActivity(), loadDraft()]);
+  await Promise.all([loadLeaderboard(), loadTeams(), loadSettings(), loadMatches(), loadActivity(), loadDraft(), loadTrades()]);
 }
 
 async function loadLeaderboard() {
@@ -606,10 +607,17 @@ function renderTradeDeadlineBanner() {
   clearInterval(tradeDeadlineInterval);
   const banner = document.getElementById('tradeDeadlineBanner');
   if (!banner) return;
+  const market = document.getElementById('tradeMarket');
   const deadline = settingsData.trade_deadline;
-  if (!deadline || !settingsData.trade_deadline_active) { banner.style.display = 'none'; return; }
+  if (!settingsData.trade_deadline_active) {
+    banner.style.display = 'none';
+    if (market) market.style.display = 'none';
+    return;
+  }
 
-  banner.style.display = '';
+  if (deadline) banner.style.display = '';
+  if (market) market.style.display = '';
+  renderTrades();
   const timerEl = document.getElementById('tradeDeadlineTimer');
 
   function tick() {
@@ -1205,3 +1213,153 @@ setInterval(checkVersion, 30_000);
 // Boot
 checkVersion(); // establish baseline version on load
 loadAll();
+
+// ─── Trade Market ─────────────────────────────────────────────────────────────
+
+async function loadTrades() {
+  try {
+    const res = await fetch('/api/trades');
+    tradesData = res.ok ? await res.json() : [];
+  } catch (_) {
+    tradesData = [];
+  }
+  renderTrades();
+}
+
+function getTeamDisplay(code) {
+  const team = teamsData.find(t => t.code === code);
+  return team ? `${team.flag} ${escHtml(team.name)}` : escHtml(code);
+}
+
+function renderTrades() {
+  const el = document.getElementById('tradeList');
+  if (!el) return;
+  const isAdmin = localStorage.getItem('adminAuth') === '1';
+
+  if (!tradesData.length) {
+    el.innerHTML = '<p class="trade-empty">No active trades. Be the first to propose one!</p>';
+    return;
+  }
+
+  el.innerHTML = tradesData.map(t => {
+    const offerDisplay = t.offer_teams.map(getTeamDisplay).join(', ');
+    const requestDisplay = t.request_teams.map(getTeamDisplay).join(', ');
+    return `
+      <div class="trade-card">
+        <div class="trade-card-header">
+          <div class="trade-players">${escHtml(t.proposer_name)} → ${escHtml(t.receiver_name)}</div>
+          <span class="trade-status-badge pending">Pending</span>
+        </div>
+        <div class="trade-sides">
+          <div class="trade-side">
+            <div class="trade-side-label">Offering</div>
+            <div class="trade-teams">${offerDisplay}</div>
+          </div>
+          <div class="trade-arrow">⇄</div>
+          <div class="trade-side">
+            <div class="trade-side-label">For</div>
+            <div class="trade-teams">${requestDisplay}</div>
+          </div>
+        </div>
+        <div class="trade-card-actions">
+          <button class="btn btn-ghost" onclick="cancelTrade(${t.id})" style="font-size:12px;padding:4px 12px">Withdraw</button>
+          ${isAdmin ? `
+          <button class="btn btn-danger" onclick="rejectTrade(${t.id})" style="font-size:12px;padding:4px 12px">Reject</button>
+          <button class="btn btn-primary" onclick="approveTrade(${t.id})" style="font-size:12px;padding:4px 12px">Approve ✓</button>
+          ` : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function openProposeTradeModal() {
+  if (!leaderboardData.length) { showToast('No players found', 'error'); return; }
+  const proposerSel = document.getElementById('tradeProposer');
+  const receiverSel = document.getElementById('tradeReceiver');
+  const allOpts = leaderboardData.map(p => `<option value="${p.id}">${escHtml(p.name)}</option>`).join('');
+  proposerSel.innerHTML = '<option value="">— Who are you? —</option>' + allOpts;
+  receiverSel.innerHTML = '<option value="">— Other player —</option>' + allOpts;
+  document.getElementById('tradeOfferChips').innerHTML = '<span class="trade-chip-hint">Select your name above</span>';
+  document.getElementById('tradeRequestChips').innerHTML = '<span class="trade-chip-hint">Select a player above</span>';
+  openModal('proposeTradeModal');
+}
+
+function onProposerChange() {
+  const proposerId = parseInt(document.getElementById('tradeProposer').value);
+  const container = document.getElementById('tradeOfferChips');
+  if (!proposerId) { container.innerHTML = '<span class="trade-chip-hint">Select your name above</span>'; return; }
+
+  // Update receiver options to exclude self
+  const receiverSel = document.getElementById('tradeReceiver');
+  const prevReceiverId = receiverSel.value;
+  receiverSel.innerHTML = '<option value="">— Other player —</option>' +
+    leaderboardData.filter(p => p.id !== proposerId)
+      .map(p => `<option value="${p.id}">${escHtml(p.name)}</option>`).join('');
+  if (prevReceiverId && parseInt(prevReceiverId) !== proposerId) receiverSel.value = prevReceiverId;
+
+  const player = leaderboardData.find(p => p.id === proposerId);
+  if (!player?.teams.length) { container.innerHTML = '<span class="trade-chip-hint">This player has no teams</span>'; return; }
+  container.innerHTML = player.teams.map(t =>
+    `<span class="trade-select-chip" data-code="${t.code}" onclick="toggleTradeChip(this)">${t.flag} ${escHtml(t.name)}</span>`
+  ).join('');
+}
+
+function onReceiverChange() {
+  const receiverId = parseInt(document.getElementById('tradeReceiver').value);
+  const container = document.getElementById('tradeRequestChips');
+  if (!receiverId) { container.innerHTML = '<span class="trade-chip-hint">Select a player above</span>'; return; }
+  const player = leaderboardData.find(p => p.id === receiverId);
+  if (!player?.teams.length) { container.innerHTML = '<span class="trade-chip-hint">This player has no teams</span>'; return; }
+  container.innerHTML = player.teams.map(t =>
+    `<span class="trade-select-chip" data-code="${t.code}" onclick="toggleTradeChip(this)">${t.flag} ${escHtml(t.name)}</span>`
+  ).join('');
+}
+
+function toggleTradeChip(el) { el.classList.toggle('selected'); }
+
+async function submitTrade() {
+  const proposerId = parseInt(document.getElementById('tradeProposer').value);
+  const receiverId = parseInt(document.getElementById('tradeReceiver').value);
+  const offerTeams = [...document.querySelectorAll('#tradeOfferChips .trade-select-chip.selected')].map(el => el.dataset.code);
+  const requestTeams = [...document.querySelectorAll('#tradeRequestChips .trade-select-chip.selected')].map(el => el.dataset.code);
+
+  if (!proposerId || !receiverId) { showToast('Select both players', 'error'); return; }
+  if (!offerTeams.length) { showToast('Select at least one team to offer', 'error'); return; }
+  if (!requestTeams.length) { showToast('Select at least one team to request', 'error'); return; }
+
+  const res = await fetch('/api/trades', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ proposer_id: proposerId, receiver_id: receiverId, offer_teams: offerTeams, request_teams: requestTeams }),
+  });
+  const data = await res.json();
+  if (!res.ok) { showToast(data.error || 'Failed to propose trade', 'error'); return; }
+  closeModal('proposeTradeModal');
+  showToast('Trade proposed!', 'success');
+  await loadTrades();
+}
+
+async function cancelTrade(id) {
+  const res = await fetch(`/api/trades/${id}`, { method: 'DELETE' });
+  const d = await res.json();
+  if (!res.ok) { showToast(d.error || 'Failed to withdraw trade', 'error'); return; }
+  showToast('Trade withdrawn', 'success');
+  await loadTrades();
+}
+
+async function approveTrade(id) {
+  const res = await fetch(`/api/trades/${id}/approve`, { method: 'POST' });
+  const d = await res.json();
+  if (!res.ok) { showToast(d.error || 'Failed to approve trade', 'error'); return; }
+  showToast('Trade approved! Teams swapped.', 'success');
+  await loadAll();
+}
+
+async function rejectTrade(id) {
+  const res = await fetch(`/api/trades/${id}/reject`, { method: 'POST' });
+  const d = await res.json();
+  if (!res.ok) { showToast(d.error || 'Failed to reject trade', 'error'); return; }
+  showToast('Trade rejected', 'success');
+  await loadTrades();
+}

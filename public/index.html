@@ -42,6 +42,15 @@
       <div id="tradeDeadlineTimer" class="trade-deadline-timer">—</div>
     </div>
 
+    <!-- Trade Market (same toggle as trade deadline) -->
+    <div id="tradeMarket" style="display:none">
+      <div class="trade-market-header">
+        <span class="trade-market-title">🔄 Trade Market</span>
+        <button class="btn btn-primary" onclick="openProposeTradeModal()" style="font-size:13px;padding:6px 14px">+ Propose</button>
+      </div>
+      <div id="tradeList" class="trade-list"></div>
+    </div>
+
     <!-- Draft banner (shown when draft is active) -->
     <div id="draftBanner" class="draft-banner" style="display:none">
       <div class="draft-banner-top">
@@ -220,7 +229,7 @@
     </div>
     <div class="settings-lock-row">
       <div class="settings-row">
-        <label>🚨 Trade Deadline Timer</label>
+        <label>🔄 Trade Period</label>
         <label class="toggle-wrap">
           <input type="checkbox" id="s_trade_deadline_active" />
           <span class="toggle-track"><span class="toggle-thumb"></span></span>
@@ -334,6 +343,33 @@
     </div>
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeModal('menuModal')" style="width:100%;margin-top:4px">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Propose Trade Modal -->
+<div class="modal-overlay" id="proposeTradeModal">
+  <div class="modal modal-wide">
+    <h3>🔄 Propose Trade</h3>
+    <div class="trade-form-group">
+      <label class="trade-form-label">I am...</label>
+      <select id="tradeProposer" class="modal-input" onchange="onProposerChange()"></select>
+    </div>
+    <div class="trade-form-group">
+      <label class="trade-form-label">I'm offering (tap to select):</label>
+      <div id="tradeOfferChips" class="trade-chip-grid"><span class="trade-chip-hint">Select your name above</span></div>
+    </div>
+    <div class="trade-form-group">
+      <label class="trade-form-label">Trading with...</label>
+      <select id="tradeReceiver" class="modal-input" onchange="onReceiverChange()"></select>
+    </div>
+    <div class="trade-form-group">
+      <label class="trade-form-label">I want (tap to select):</label>
+      <div id="tradeRequestChips" class="trade-chip-grid"><span class="trade-chip-hint">Select a player above</span></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('proposeTradeModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="submitTrade()">Propose Trade</button>
     </div>
   </div>
 </div>
