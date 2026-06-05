@@ -118,6 +118,8 @@ function renderActivity() {
     return;
   }
 
+  const isAdmin = localStorage.getItem('adminAuth') === '1';
+
   el.innerHTML = activityEntries.map(e => {
     if (e.action === 'trade') {
       const statusLabel = e.status === 'approved'
@@ -144,7 +146,7 @@ function renderActivity() {
             ${responseNote}
           </div>
           <span class="activity-time">${timeAgo(e.created_at)}</span>
-        </div>`;
+        </div>`; /* no delete button for trades — managed via trade market */
     }
     if (e.action === 'stage_advance') {
       const label = STAGE_ADVANCE_LABELS[e.stage] || e.stage;
@@ -160,6 +162,7 @@ function renderActivity() {
             ${pts > 0 && hasOwner ? `<span class="activity-pts">+${pts} pts</span>` : ''}
           </div>
           <span class="activity-time">${timeAgo(e.created_at)}</span>
+          ${isAdmin ? `<button class="activity-delete-btn" onclick="deleteActivity(${e.id})" title="Delete">×</button>` : ''}
         </div>`;
     }
     const isAssigned = e.action === 'assigned';
@@ -174,6 +177,7 @@ function renderActivity() {
           <span class="activity-player">${escHtml(e.player_name)}</span>
         </div>
         <span class="activity-time">${timeAgo(e.created_at)}</span>
+        ${isAdmin ? `<button class="activity-delete-btn" onclick="deleteActivity(${e.id})" title="Delete">×</button>` : ''}
       </div>`;
   }).join('');
 }
@@ -684,6 +688,8 @@ function submitSettingsPassword() {
   if (input.value === 'Netherlands121') {
     localStorage.setItem('adminAuth', '1');
     closeModal('settingsAuthModal');
+    renderActivity();
+    renderTrades();
     setTimeout(openMenu, 220);
   } else {
     document.getElementById('settingsAuthError').style.display = '';
@@ -695,7 +701,16 @@ function submitSettingsPassword() {
 function adminSignOut() {
   localStorage.removeItem('adminAuth');
   closeModal('menuModal');
+  renderActivity();
   showToast('Signed out on this device', 'success');
+}
+
+async function deleteActivity(id) {
+  const res = await fetch(`/api/activity/${id}`, { method: 'DELETE' });
+  if (!res.ok) { showToast('Failed to delete', 'error'); return; }
+  activityEntries = activityEntries.filter(e => e.id !== id);
+  renderActivity();
+  updateActivityBadge();
 }
 
 function openSettings() {

@@ -929,6 +929,19 @@ input[type=checkbox]:checked + .toggle-track .toggle-thumb { transform: translat
 .activity-trade-response { display: block; font-size: 11px; font-weight: 700; margin-top: 2px; }
 .activity-trade-response.accepted { color: #4ade80; }
 .activity-trade-response.declined { color: #f87171; }
+.activity-delete-btn {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 0 0 8px;
+  opacity: 0.4;
+  flex-shrink: 0;
+  transition: opacity 0.15s, color 0.15s;
+}
+.activity-delete-btn:hover { opacity: 1; color: var(--red); }
 .activity-player { font-weight: 700; color: var(--accent); }
 .activity-pts {
   font-size: 11px;
