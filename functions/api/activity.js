@@ -13,6 +13,7 @@ export async function onRequestGet({ env }) {
         FROM trades t
         JOIN players p1 ON p1.id = t.proposer_id
         JOIN players p2 ON p2.id = t.receiver_id
+        WHERE t.status IN ('pending', 'approved')
         ORDER BY t.created_at DESC LIMIT 50
       `).all().catch(() => ({ results: [] })),
     ]);
@@ -20,6 +21,7 @@ export async function onRequestGet({ env }) {
     const tradeEntries = trades.map(t => ({
       _type: 'trade',
       id: `trade_${t.id}`,
+      trade_id: t.id,
       action: 'trade',
       status: t.status,
       receiver_response: t.receiver_response,

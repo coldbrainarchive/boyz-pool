@@ -49,6 +49,7 @@ async function loadTeams() {
     if (!res.ok) return;
     teamsData = await res.json();
     renderTeams();
+    renderActivity(); // re-render now that team names/flags are available
   } catch (_) {}
 }
 
@@ -126,8 +127,6 @@ function renderActivity() {
         ? '<span class="activity-action assigned">approved</span>'
         : e.status === 'rejected'
         ? '<span class="activity-action removed">rejected</span>'
-        : e.status === 'cancelled'
-        ? '<span class="activity-action removed">withdrawn</span>'
         : '<span class="activity-action trade-pending">proposed</span>';
       const responseNote = e.status === 'pending' && e.receiver_response
         ? `<span class="activity-trade-response ${e.receiver_response}">${e.receiver_response === 'accepted' ? '✓ accepted' : '✗ declined'} by ${escHtml(e.receiver_name)}</span>`
@@ -146,7 +145,8 @@ function renderActivity() {
             ${responseNote}
           </div>
           <span class="activity-time">${timeAgo(e.created_at)}</span>
-        </div>`; /* no delete button for trades — managed via trade market */
+          ${isAdmin ? `<button class="activity-delete-btn" onclick="deleteTradeActivity('${e.id}',${e.trade_id})" title="Delete">×</button>` : ''}
+        </div>`;
     }
     if (e.action === 'stage_advance') {
       const label = STAGE_ADVANCE_LABELS[e.stage] || e.stage;
@@ -710,6 +710,15 @@ async function deleteActivity(id) {
   if (!res.ok) { showToast('Failed to delete', 'error'); return; }
   activityEntries = activityEntries.filter(e => e.id !== id);
   renderActivity();
+  updateActivityBadge();
+}
+
+async function deleteTradeActivity(activityId, tradeId) {
+  await fetch(`/api/trades/${tradeId}`, { method: 'DELETE' });
+  activityEntries = activityEntries.filter(e => e.id !== activityId);
+  tradesData = tradesData.filter(t => t.id !== tradeId);
+  renderActivity();
+  renderTrades();
   updateActivityBadge();
 }
 
