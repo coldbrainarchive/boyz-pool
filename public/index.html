@@ -196,21 +196,18 @@
 <div class="modal-overlay" id="draftModal">
   <div class="modal modal-wide">
     <h3>🐍 Snake Draft</h3>
-    <p class="modal-sub" id="draftStatusLabel">Configure the draft settings below.</p>
+    <p class="modal-sub" id="draftStatusLabel">Configure and press Start.</p>
 
-    <h4>Draft Order (forward)</h4>
-    <div id="draftOrderPreview" class="draft-order-preview"></div>
+    <h4>Starting Player</h4>
+    <select id="draftStartPlayer" class="modal-input"></select>
 
-    <h4>Start from</h4>
-    <div class="settings-row">
-      <label>Pick number</label>
-      <div class="settings-input-wrap">
-        <input type="number" id="draftPickInput" min="0" max="47" value="6" class="pts-input" style="width:60px" oninput="updateDraftPickLabel()" />
-      </div>
+    <h4>Direction</h4>
+    <div class="draft-dir-toggle">
+      <button class="draft-dir-btn" id="draftDirFwd" onclick="setDraftDir('forward')">→ Forward</button>
+      <button class="draft-dir-btn active" id="draftDirRev" onclick="setDraftDir('reverse')">← Reverse</button>
     </div>
-    <div id="draftPickLabel" class="draft-pick-hint"></div>
 
-    <h4>Timer per turn</h4>
+    <h4>Timer Per Turn</h4>
     <div class="settings-row">
       <label>Enable timer</label>
       <label class="toggle-wrap">
@@ -233,9 +230,9 @@
       </div>
     </div>
 
-    <div class="modal-actions" style="flex-direction:column;gap:8px">
+    <div class="modal-actions" style="flex-direction:column;gap:8px;margin-top:8px">
       <button class="btn btn-primary" style="width:100%" onclick="startDraft()">▶ Start Draft</button>
-      <button class="btn btn-danger" style="width:100%" id="stopDraftBtn" onclick="stopDraft()">■ Stop Draft</button>
+      <button class="btn btn-danger" style="width:100%;display:none" id="stopDraftBtn" onclick="stopDraft()">■ Stop Draft</button>
       <button class="btn btn-ghost" style="width:100%" onclick="closeModal('draftModal')">Cancel</button>
     </div>
   </div>
