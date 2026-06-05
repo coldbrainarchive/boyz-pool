@@ -124,9 +124,11 @@ function renderActivity() {
   el.innerHTML = activityEntries.map(e => {
     if (e.action === 'trade') {
       const statusLabel = e.status === 'approved'
-        ? '<span class="activity-action assigned">approved</span>'
+        ? '<span class="activity-action assigned">approved ✓</span>'
         : e.status === 'rejected'
         ? '<span class="activity-action removed">rejected</span>'
+        : e.status === 'cancelled'
+        ? '<span class="activity-action removed">withdrawn</span>'
         : '<span class="activity-action trade-pending">proposed</span>';
       const responseNote = e.status === 'pending' && e.receiver_response
         ? `<span class="activity-trade-response ${e.receiver_response}">${e.receiver_response === 'accepted' ? '✓ accepted' : '✗ declined'} by ${escHtml(e.receiver_name)}</span>`
@@ -1418,11 +1420,11 @@ async function respondTrade(id, response) {
 }
 
 async function cancelTrade(id) {
-  const res = await fetch(`/api/trades/${id}`, { method: 'DELETE' });
+  const res = await fetch(`/api/trades/${id}/cancel`, { method: 'POST' });
   const d = await res.json();
   if (!res.ok) { showToast(d.error || 'Failed to withdraw trade', 'error'); return; }
   showToast('Trade withdrawn', 'success');
-  await loadTrades();
+  await Promise.all([loadTrades(), loadActivity()]);
 }
 
 async function approveTrade(id) {
