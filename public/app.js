@@ -494,14 +494,30 @@ function handleTeamClick(teamCode) {
 }
 
 function openAssign(teamCode) {
-  const team = teamsData.find(t => t.code === teamCode);
-  pendingAssignTeamCode = teamCode;
-  document.getElementById('assignModalTitle').textContent = `Assign ${team?.flag || ''} ${team?.name || teamCode}`;
-  document.getElementById('assignModalSub').textContent = 'Choose a player to assign this team to:';
-  const select = document.getElementById('assignPlayerSelect');
-  if (!leaderboardData.length) { showToast('Add a player first', 'error'); return; }
-  select.innerHTML = leaderboardData.map(p => `<option value="${p.id}">${escHtml(p.name)}</option>`).join('');
-  openModal('assignModal');
+  // Always re-fetch draft state before deciding — avoids stale cached state
+  fetch('/api/draft').then(r => r.json()).then(fresh => {
+    draftState = fresh;
+    if (fresh?.active) {
+      assignDraftPick(teamCode);
+      return;
+    }
+    const team = teamsData.find(t => t.code === teamCode);
+    pendingAssignTeamCode = teamCode;
+    document.getElementById('assignModalTitle').textContent = `Assign ${team?.flag || ''} ${team?.name || teamCode}`;
+    document.getElementById('assignModalSub').textContent = 'Choose a player to assign this team to:';
+    const select = document.getElementById('assignPlayerSelect');
+    if (!leaderboardData.length) { showToast('Add a player first', 'error'); return; }
+    select.innerHTML = leaderboardData.map(p => `<option value="${p.id}">${escHtml(p.name)}</option>`).join('');
+    openModal('assignModal');
+  }).catch(() => {
+    // Fallback to normal modal if fetch fails
+    const team = teamsData.find(t => t.code === teamCode);
+    pendingAssignTeamCode = teamCode;
+    const select = document.getElementById('assignPlayerSelect');
+    if (!leaderboardData.length) { showToast('Add a player first', 'error'); return; }
+    select.innerHTML = leaderboardData.map(p => `<option value="${p.id}">${escHtml(p.name)}</option>`).join('');
+    openModal('assignModal');
+  });
 }
 
 function openAssignForPlayer(playerId) {
@@ -545,7 +561,7 @@ async function submitAssign() {
       const advRes = await fetch('/api/draft/advance', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reason: 'pick', fromPickNumber: draftState.pick_number }),
+        body: JSON.stringify({ reason: 'pick' }),
       });
       const advData = await advRes.json();
       if (!advRes.ok) showToast(advData.error || 'Draft advance failed', 'error');
@@ -727,7 +743,7 @@ async function assignDraftPick(teamCode) {
     const advRes = await fetch('/api/draft/advance', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ reason: 'pick', fromPickNumber: draftState.pick_number }),
+      body: JSON.stringify({ reason: 'pick' }),
     });
     advData = await advRes.json();
     if (!advRes.ok) showToast(advData.error || 'Draft advance failed', 'error');
@@ -752,7 +768,7 @@ async function autoAdvanceDraft() {
     const res = await fetch('/api/draft/advance', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ reason: 'timeout', fromPickNumber: draftState.pick_number }),
+      body: JSON.stringify({ reason: 'timeout' }),
     });
     const data = await res.json();
     if (data.success && !data.skipped) {

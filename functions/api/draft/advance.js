@@ -4,13 +4,9 @@ const TOTAL_ROUNDS = 8; // 8 teams per player
 
 export async function onRequestPost({ env, request }) {
   try {
-    const { reason, fromPickNumber } = await request.json();
+    const { reason } = await request.json();
     const state = await env.DB.prepare('SELECT * FROM draft WHERE id = 1').first();
     if (!state?.active) return json({ error: 'Draft not active' }, 400);
-
-    // Stale call guard — another client already advanced
-    if (fromPickNumber !== undefined && state.pick_number !== fromPickNumber)
-      return json({ success: true, skipped: true, pick_number: state.pick_number });
 
     // Timer expiry validation (5s grace window)
     if (reason === 'timeout' && state.timer_enabled && state.pick_started_at) {
