@@ -541,13 +541,16 @@ async function submitAssign() {
 
   // Advance draft if active and this was the current drafter's pick
   if (draftState?.active && String(draftState.current_player_id) === String(playerId)) {
-    const advRes = await fetch('/api/draft/advance', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ reason: 'pick', fromPickNumber: draftState.pick_number }),
-    });
-    const advData = await advRes.json();
-    if (advData.complete) showToast('🏆 Draft complete!', 'success');
+    try {
+      const advRes = await fetch('/api/draft/advance', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason: 'pick', fromPickNumber: draftState.pick_number }),
+      });
+      const advData = await advRes.json();
+      if (!advRes.ok) showToast(advData.error || 'Draft advance failed', 'error');
+      else if (advData.complete) showToast('🏆 Draft complete!', 'success');
+    } catch (e) { showToast('Draft advance error', 'error'); }
   }
 
   await loadDraft();
@@ -719,12 +722,16 @@ async function assignDraftPick(teamCode) {
   if (!res.ok) { showToast(data.error || 'Pick failed', 'error'); return; }
 
   // Advance draft
-  const advRes = await fetch('/api/draft/advance', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ reason: 'pick', fromPickNumber: draftState.pick_number }),
-  });
-  const advData = await advRes.json();
+  let advData = {};
+  try {
+    const advRes = await fetch('/api/draft/advance', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reason: 'pick', fromPickNumber: draftState.pick_number }),
+    });
+    advData = await advRes.json();
+    if (!advRes.ok) showToast(advData.error || 'Draft advance failed', 'error');
+  } catch (e) { showToast('Draft advance error', 'error'); }
 
   if (advData.complete) {
     showToast('🏆 Draft complete! All picks are in.', 'success');

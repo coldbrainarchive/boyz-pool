@@ -1,13 +1,4 @@
-import { json } from './_shared.js';
-
-export function getPlayerAtPick(order, pickNum) {
-  const n = order.length;
-  if (!n) return null;
-  const round = Math.floor(pickNum / n);
-  const pos   = pickNum % n;
-  const idx   = round % 2 === 1 ? (n - 1 - pos) : pos;
-  return order[idx] ?? null;
-}
+import { json, getPlayerAtPick } from './_shared.js';
 
 export async function onRequestGet({ env }) {
   try {

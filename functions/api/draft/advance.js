@@ -1,5 +1,4 @@
-import { json } from '../_shared.js';
-import { getPlayerAtPick } from '../draft.js';
+import { json, getPlayerAtPick } from '../_shared.js';
 
 const TOTAL_ROUNDS = 8; // 8 teams per player
 

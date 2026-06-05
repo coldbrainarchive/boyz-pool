@@ -25,6 +25,16 @@ export async function getSettings(db) {
   return s;
 }
 
+// Snake draft: returns the player ID at a given pick number
+export function getPlayerAtPick(order, pickNum) {
+  const n = order.length;
+  if (!n) return null;
+  const round = Math.floor(pickNum / n);
+  const pos   = pickNum % n;
+  const idx   = round % 2 === 1 ? (n - 1 - pos) : pos;
+  return order[idx] ?? null;
+}
+
 export function json(data, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
