@@ -637,6 +637,7 @@ function renderTradeDeadlineBanner() {
 // ─── Settings ─────────────────────────────────────────────────────────────────
 
 function openMenuAuth() {
+  if (localStorage.getItem('adminAuth') === '1') { openMenu(); return; }
   document.getElementById('settingsPasswordInput').value = '';
   document.getElementById('settingsAuthError').style.display = 'none';
   openModal('settingsAuthModal');
@@ -646,6 +647,7 @@ function openMenuAuth() {
 function submitSettingsPassword() {
   const input = document.getElementById('settingsPasswordInput');
   if (input.value === 'Netherlands121') {
+    localStorage.setItem('adminAuth', '1');
     closeModal('settingsAuthModal');
     setTimeout(openMenu, 220);
   } else {
@@ -653,6 +655,12 @@ function submitSettingsPassword() {
     input.value = '';
     input.focus();
   }
+}
+
+function adminSignOut() {
+  localStorage.removeItem('adminAuth');
+  closeModal('menuModal');
+  showToast('Signed out on this device', 'success');
 }
 
 function openSettings() {
