@@ -219,9 +219,14 @@
       </div>
     </div>
     <div class="settings-lock-row">
-      <label class="settings-section-label">🚨 Trade Deadline Timer</label>
+      <div class="settings-row">
+        <label>🚨 Trade Deadline Timer</label>
+        <label class="toggle-wrap">
+          <input type="checkbox" id="s_trade_deadline_active" />
+          <span class="toggle-track"><span class="toggle-thumb"></span></span>
+        </label>
+      </div>
       <input type="datetime-local" id="s_trade_deadline" class="modal-input" style="margin-top:8px" />
-      <p class="settings-hint">Leave empty to hide the countdown banner.</p>
     </div>
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeModal('settingsModal')">Cancel</button>

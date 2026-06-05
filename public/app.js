@@ -607,7 +607,7 @@ function renderTradeDeadlineBanner() {
   const banner = document.getElementById('tradeDeadlineBanner');
   if (!banner) return;
   const deadline = settingsData.trade_deadline;
-  if (!deadline) { banner.style.display = 'none'; return; }
+  if (!deadline || !settingsData.trade_deadline_active) { banner.style.display = 'none'; return; }
 
   banner.style.display = '';
   const timerEl = document.getElementById('tradeDeadlineTimer');
@@ -672,6 +672,7 @@ function openSettings() {
   document.getElementById('s_runner_up').value   = s.pts_runner_up ?? 10;
   document.getElementById('s_champion').value    = s.pts_champion  ?? 10;
   document.getElementById('s_teams_locked').checked = !!s.teams_locked;
+  document.getElementById('s_trade_deadline_active').checked = !!s.trade_deadline_active;
 
   const dlInput = document.getElementById('s_trade_deadline');
   if (s.trade_deadline > 0) {
@@ -712,8 +713,9 @@ async function saveSettings() {
     pts_sf:        parseInt(document.getElementById('s_sf').value)        || 0,
     pts_runner_up: parseInt(document.getElementById('s_runner_up').value) || 0,
     pts_champion:  parseInt(document.getElementById('s_champion').value)  || 0,
-    teams_locked:   document.getElementById('s_teams_locked').checked ? 1 : 0,
-    trade_deadline: (() => { const v = document.getElementById('s_trade_deadline').value; return v ? new Date(v).getTime() : 0; })(),
+    teams_locked:          document.getElementById('s_teams_locked').checked ? 1 : 0,
+    trade_deadline:        (() => { const v = document.getElementById('s_trade_deadline').value; return v ? new Date(v).getTime() : 0; })(),
+    trade_deadline_active: document.getElementById('s_trade_deadline_active').checked ? 1 : 0,
   };
   const res = await fetch('/api/settings', {
     method: 'PATCH',

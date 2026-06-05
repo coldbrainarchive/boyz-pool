@@ -3,6 +3,7 @@ export const DEFAULT_SETTINGS = {
   pts_sf: 10, pts_runner_up: 10, pts_champion: 10,
   teams_locked: 0,
   trade_deadline: 0,
+  trade_deadline_active: 0,
 };
 
 export const VALID_STAGES = [null, 'GROUP', 'R32', 'R16', 'QF', 'SF', 'FINAL', 'WINNER'];
