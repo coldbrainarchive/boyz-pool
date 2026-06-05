@@ -1082,5 +1082,38 @@ function escHtml(str) {
 // Auto-refresh every 60 seconds
 setInterval(loadAll, 60_000);
 
+// ─── Force refresh all clients ────────────────────────────────────────────────
+
+let localVersion = '0';
+
+async function checkVersion() {
+  try {
+    const res = await fetch('/api/version');
+    if (!res.ok) return;
+    const { version } = await res.json();
+    if (localVersion === '0') {
+      localVersion = version; // first load — store as baseline
+    } else if (version !== localVersion) {
+      location.reload(); // server version changed — reload silently
+    }
+  } catch (_) {}
+}
+
+async function forceRefreshAll() {
+  closeModal('menuModal');
+  try {
+    const res = await fetch('/api/version', { method: 'POST' });
+    const data = await res.json();
+    if (res.ok) {
+      localVersion = data.version; // don't reload yourself
+      showToast('All devices will refresh within 30 seconds', 'success');
+    }
+  } catch (_) { showToast('Failed to send refresh', 'error'); }
+}
+
+// Poll for forced refresh every 30 seconds
+setInterval(checkVersion, 30_000);
+
 // Boot
+checkVersion(); // establish baseline version on load
 loadAll();
