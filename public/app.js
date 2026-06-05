@@ -1244,6 +1244,16 @@ function renderTrades() {
   el.innerHTML = tradesData.map(t => {
     const offerDisplay = t.offer_teams.map(getTeamDisplay).join(', ');
     const requestDisplay = t.request_teams.map(getTeamDisplay).join(', ');
+    const r = t.receiver_response;
+    const responseBadge = r === 'accepted'
+      ? `<span class="trade-response-badge accepted">✓ ${escHtml(t.receiver_name)} accepted</span>`
+      : r === 'declined'
+      ? `<span class="trade-response-badge declined">✗ ${escHtml(t.receiver_name)} declined</span>`
+      : `<span class="trade-response-badge waiting">⏳ Waiting for ${escHtml(t.receiver_name)}</span>`;
+    const respondBtns = !r
+      ? `<button class="btn btn-ghost" onclick="respondTrade(${t.id},'declined')" style="font-size:12px;padding:4px 10px">✗ Decline</button>
+         <button class="btn btn-primary" onclick="respondTrade(${t.id},'accepted')" style="font-size:12px;padding:4px 10px">✓ Accept</button>`
+      : `<button class="btn btn-ghost" onclick="respondTrade(${t.id}, '${r === 'accepted' ? 'declined' : 'accepted'}')" style="font-size:12px;padding:4px 10px;opacity:0.6">Change mind</button>`;
     return `
       <div class="trade-card">
         <div class="trade-card-header">
@@ -1260,6 +1270,10 @@ function renderTrades() {
             <div class="trade-side-label">For</div>
             <div class="trade-teams">${requestDisplay}</div>
           </div>
+        </div>
+        <div class="trade-response-row">
+          ${responseBadge}
+          <div class="trade-respond-btns">${respondBtns}</div>
         </div>
         <div class="trade-card-actions">
           <button class="btn btn-ghost" onclick="cancelTrade(${t.id})" style="font-size:12px;padding:4px 12px">Withdraw</button>
@@ -1337,6 +1351,18 @@ async function submitTrade() {
   if (!res.ok) { showToast(data.error || 'Failed to propose trade', 'error'); return; }
   closeModal('proposeTradeModal');
   showToast('Trade proposed!', 'success');
+  await loadTrades();
+}
+
+async function respondTrade(id, response) {
+  const res = await fetch(`/api/trades/${id}/respond`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ response }),
+  });
+  const d = await res.json();
+  if (!res.ok) { showToast(d.error || 'Failed', 'error'); return; }
+  showToast(response === 'accepted' ? 'Trade accepted!' : 'Trade declined', response === 'accepted' ? 'success' : '');
   await loadTrades();
 }
 

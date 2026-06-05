@@ -4,7 +4,7 @@ export async function onRequestGet({ env }) {
   try {
     const { results } = await env.DB.prepare(`
       SELECT t.id, t.proposer_id, t.receiver_id, t.offer_teams, t.request_teams,
-             t.status, t.created_at, p1.name AS proposer_name, p2.name AS receiver_name
+             t.status, t.receiver_response, t.created_at, p1.name AS proposer_name, p2.name AS receiver_name
       FROM trades t
       JOIN players p1 ON p1.id = t.proposer_id
       JOIN players p2 ON p2.id = t.receiver_id
