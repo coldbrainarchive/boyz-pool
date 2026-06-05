@@ -617,7 +617,7 @@ function renderMatches() {
   const el = document.getElementById('matchesList');
   if (!el || !matchesData.length) return;
 
-  const liveStatuses = ['IN_PLAY', 'PAUSED', 'HALFTIME'];
+  const liveStatuses = ['IN_PLAY', 'PAUSED', 'EXTRA_TIME', 'PENALTY_SHOOTOUT'];
 
   let filtered = [...matchesData];
   if (matchFilter === 'live') {
@@ -627,7 +627,7 @@ function renderMatches() {
       return;
     }
   } else if (matchFilter === 'upcoming') {
-    filtered = filtered.filter(m => ['SCHEDULED','TIMED'].includes(m.status));
+    filtered = filtered.filter(m => ['SCHEDULED', 'TIMED'].includes(m.status));
   } else if (matchFilter === 'finished') {
     filtered = filtered.filter(m => m.status === 'FINISHED').reverse();
   }

@@ -47,10 +47,11 @@ export async function onRequestPost({ env }) {
     const sRes = await fetch('https://api.football-data.org/v4/competitions/WC/standings?season=2026', { headers: hdrs });
     if (sRes.ok) {
       const data = await sRes.json();
-      // Validate we have 2026 season data
-      if (data?.filters?.season !== '2026') {
-        return json({ success: false, message: 'API returned wrong season data — try again later' });
-      }
+      // Sanity check: reject if API clearly returned a different season
+      const season = String(data?.filters?.season ?? '');
+      if (season && season !== '2026') {
+        console.warn(`[sync] Expected season 2026, got ${season} — skipping standings`);
+      } else {
       const thirdPlace = [];
       for (const group of (data.standings || [])) {
         const table = group.table || [];
@@ -66,6 +67,7 @@ export async function onRequestPost({ env }) {
       thirdPlace.sort((a, b) => b.pts - a.pts || b.gd - a.gd || b.gf - a.gf);
       for (let i = 0; i < thirdPlace.length; i++)
         await setStageIfHigher(env.DB, thirdPlace[i].tla, i < 8 ? 'R32' : 'GROUP');
+      } // end else (correct season)
     }
 
     // Knockout matches
@@ -74,7 +76,7 @@ export async function onRequestPost({ env }) {
       const { matches } = await mRes.json();
       const ko = ['ROUND_OF_32','ROUND_OF_16','QUARTER_FINALS','SEMI_FINALS','FINAL'];
       for (const m of (matches || [])) {
-        if (!ko.includes(m.stage) || m.status !== 'FINISHED') continue;
+        if (!ko.includes(m.stage) || !['FINISHED'].includes(m.status)) continue;
         const w = m.score?.winner;
         if (!w || w === 'DRAW') continue;
         const winnerTla = w === 'HOME_TEAM' ? m.homeTeam?.tla : m.awayTeam?.tla;
