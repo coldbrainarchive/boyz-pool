@@ -274,16 +274,17 @@ function renderLeaderboard() {
       ? `<img src="${player.photo}" class="player-avatar" onclick="updatePlayerPhoto(${player.id})" title="Tap to change photo" />`
       : `<div class="player-avatar player-avatar-placeholder" onclick="updatePlayerPhoto(${player.id})" title="Tap to add photo">${escHtml(player.name[0].toUpperCase())}</div>`;
 
+    const locked = !!settingsData.teams_locked;
     const teamChips = player.teams.map(t => `
       <span class="team-chip stage-${t.stage || ''}"
-            onclick="openUnassign(${player.id}, '${t.code}', '${escHtml(t.name)}')"
-            title="Click to remove ${escHtml(t.name)}">
+            ${locked ? '' : `onclick="openUnassign(${player.id}, '${t.code}', '${escHtml(t.name)}')" title="Click to remove ${escHtml(t.name)}"`}
+            style="${locked ? 'cursor:default' : ''}">
         ${t.flag} ${escHtml(t.name)}
         ${t.stage ? `<span class="chip-pts">${t.points}pts</span>` : ''}
       </span>`).join('');
 
-    // During draft: only show + Team for current picker
-    const showAddTeam = !draftState?.active || isOnClock;
+    // During draft: only show + Team for current picker; hide when locked
+    const showAddTeam = !locked && (!draftState?.active || isOnClock);
 
     return `
       <div class="player-card ${rankClass} ${draftClass}">
@@ -292,6 +293,7 @@ function renderLeaderboard() {
         <div class="player-info">
           <div class="player-name">
             ${escHtml(player.name)}
+            ${locked ? `<span class="teams-locked-badge">🔒</span>` : ''}
             ${isOnClock ? `<span class="draft-clock-badge">ON THE CLOCK</span>` : ''}
             ${timerStr ? `<span class="draft-live-timer">${timerStr}</span>` : ''}
           </div>

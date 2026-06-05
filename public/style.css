@@ -673,6 +673,17 @@ select.modal-input option { background: var(--surface); }
 .manage-delete-btn { padding: 6px 14px; font-size: 12px; }
 
 .settings-static-row { opacity: 0.5; }
+.settings-lock-row {
+  margin-top: 10px;
+  border-top: 1px solid var(--border);
+  padding-top: 10px;
+}
+.teams-locked-badge {
+  font-size: 11px;
+  opacity: 0.6;
+  margin-left: 4px;
+  vertical-align: middle;
+}
 .settings-static-val {
   font-size: 12px;
   font-weight: 700;
