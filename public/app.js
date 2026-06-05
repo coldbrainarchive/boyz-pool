@@ -794,17 +794,24 @@ function openDraftSettings() {
   const select = document.getElementById('draftStartPlayer');
   if (select) select.innerHTML = ordered.map(p => `<option value="${p.id}">${escHtml(p.name)}</option>`).join('');
 
-  // Set defaults based on active draft state or sensible defaults
+  const n = ordered.length;
+
   if (draftState?.active && draftState.current_player_id) {
+    // Draft running — show current state
     if (select) select.value = draftState.current_player_id;
-    const n = ordered.length;
     const isRev = Math.floor(draftState.pick_number / n) % 2 === 1;
     setDraftDir(isRev ? 'reverse' : 'forward');
   } else {
-    // Default: last player (Logan), reverse — typical round 2 start
-    const last = ordered[ordered.length - 1];
-    if (last && select) select.value = last.id;
-    setDraftDir('reverse');
+    // Auto-detect from total picks already made
+    const totalPicks = leaderboardData.reduce((sum, p) => sum + (p.teams?.length || 0), 0);
+    const autoRound  = Math.floor(totalPicks / n);
+    const autoIsRev  = autoRound % 2 === 1;
+    const posInRound = totalPicks % n;
+    const autoIdx    = autoIsRev ? (n - 1 - posInRound) : posInRound;
+    const autoPlayer = ordered[autoIdx];
+
+    if (autoPlayer && select) select.value = autoPlayer.id;
+    setDraftDir(autoIsRev ? 'reverse' : 'forward');
   }
 
   // Timer settings
@@ -819,9 +826,16 @@ function openDraftSettings() {
   const stopBtn = document.getElementById('stopDraftBtn');
   if (stopBtn) stopBtn.style.display = draftState?.active ? '' : 'none';
 
-  document.getElementById('draftStatusLabel').textContent = draftState?.active
-    ? `Draft is ACTIVE — Pick ${(draftState.pick_number || 0) + 1} of ${ordered.length * DRAFT_ROUNDS}`
-    : 'Draft is not active. Configure and press Start.';
+  // Status label with auto-detect info
+  if (draftState?.active) {
+    document.getElementById('draftStatusLabel').textContent =
+      `Draft is ACTIVE — Pick ${(draftState.pick_number || 0) + 1} of ${n * DRAFT_ROUNDS}`;
+  } else {
+    const totalPicks = leaderboardData.reduce((sum, p) => sum + (p.teams?.length || 0), 0);
+    const round = Math.floor(totalPicks / n) + 1;
+    document.getElementById('draftStatusLabel').textContent =
+      `Auto-detected: Round ${round}, Pick ${totalPicks + 1} of ${n * DRAFT_ROUNDS}. Adjust if needed.`;
+  }
 
   openModal('draftModal');
 }
@@ -840,10 +854,14 @@ async function startDraft() {
   const selectedId  = parseInt(document.getElementById('draftStartPlayer')?.value);
   const playerIndex = ordered.findIndex(p => p.id === selectedId);
 
-  // Calculate pick_number: first occurrence of this player in the chosen direction
-  const pickNumber = draftDirection === 'forward'
-    ? playerIndex                    // round 0, forward
-    : n + (n - 1 - playerIndex);    // round 1, reverse
+  // Use total existing picks as the base pick number — auto-detects the round
+  const totalPicks  = leaderboardData.reduce((sum, p) => sum + (p.teams?.length || 0), 0);
+  const baseRound   = Math.floor(totalPicks / n);
+  const baseIsRev   = baseRound % 2 === 1;
+
+  // Find position of selected player within that round's direction
+  const posInRound  = baseIsRev ? (n - 1 - playerIndex) : playerIndex;
+  const pickNumber  = baseRound * n + posInRound;
 
   const timerOn   = !!document.getElementById('draftTimerToggle')?.checked;
   const hours     = parseInt(document.getElementById('draftHours')?.value) || 0;
