@@ -679,10 +679,11 @@ select.modal-input option { background: var(--surface); }
   padding-top: 10px;
 }
 .teams-locked-badge {
-  font-size: 11px;
+  font-size: 12px;
   opacity: 0.6;
   margin-left: 4px;
-  vertical-align: middle;
+  position: relative;
+  top: -1px;
 }
 .settings-static-val {
   font-size: 12px;
