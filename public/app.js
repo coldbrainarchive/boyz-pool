@@ -13,6 +13,7 @@ let activityExpanded = false;
 let activityEntries = [];
 let draftState = null;
 let draftTimerInterval = null;
+let tradeDeadlineInterval = null;
 let draftDirection = 'reverse'; // 'forward' or 'reverse'
 const DRAFT_ROUNDS = 8;
 
@@ -56,6 +57,7 @@ async function loadSettings() {
   settingsData = await res.json();
   renderScoringTable();
   updateSettingsMaxPts();
+  renderTradeDeadlineBanner();
 }
 
 async function loadActivity() {
@@ -598,6 +600,40 @@ async function submitUnassign() {
   await loadAll();
 }
 
+// ─── Trade Deadline ───────────────────────────────────────────────────────────
+
+function renderTradeDeadlineBanner() {
+  clearInterval(tradeDeadlineInterval);
+  const banner = document.getElementById('tradeDeadlineBanner');
+  if (!banner) return;
+  const deadline = settingsData.trade_deadline;
+  if (!deadline) { banner.style.display = 'none'; return; }
+
+  banner.style.display = '';
+  const timerEl = document.getElementById('tradeDeadlineTimer');
+
+  function tick() {
+    const ms = deadline - Date.now();
+    if (ms <= 0) {
+      timerEl.textContent = 'CLOSED';
+      clearInterval(tradeDeadlineInterval);
+      return;
+    }
+    const totalSecs = Math.floor(ms / 1000);
+    const d = Math.floor(totalSecs / 86400);
+    const h = Math.floor((totalSecs % 86400) / 3600);
+    const m = Math.floor((totalSecs % 3600) / 60);
+    const s = totalSecs % 60;
+    const pad = n => String(n).padStart(2, '0');
+    timerEl.textContent = d > 0
+      ? `${d}d ${pad(h)}h ${pad(m)}m ${pad(s)}s`
+      : `${pad(h)}:${pad(m)}:${pad(s)}`;
+  }
+
+  tick();
+  tradeDeadlineInterval = setInterval(tick, 1000);
+}
+
 // ─── Settings ─────────────────────────────────────────────────────────────────
 
 function openMenuAuth() {
@@ -628,6 +664,16 @@ function openSettings() {
   document.getElementById('s_runner_up').value   = s.pts_runner_up ?? 10;
   document.getElementById('s_champion').value    = s.pts_champion  ?? 10;
   document.getElementById('s_teams_locked').checked = !!s.teams_locked;
+
+  const dlInput = document.getElementById('s_trade_deadline');
+  if (s.trade_deadline > 0) {
+    const d = new Date(s.trade_deadline);
+    const pad = n => String(n).padStart(2, '0');
+    dlInput.value = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  } else {
+    dlInput.value = '';
+  }
+
   updateSettingsPreview();
 
   ['s_r16_bonus','s_r16','s_qf','s_sf','s_runner_up','s_champion'].forEach(id => {
@@ -658,7 +704,8 @@ async function saveSettings() {
     pts_sf:        parseInt(document.getElementById('s_sf').value)        || 0,
     pts_runner_up: parseInt(document.getElementById('s_runner_up').value) || 0,
     pts_champion:  parseInt(document.getElementById('s_champion').value)  || 0,
-    teams_locked:  document.getElementById('s_teams_locked').checked ? 1 : 0,
+    teams_locked:   document.getElementById('s_teams_locked').checked ? 1 : 0,
+    trade_deadline: (() => { const v = document.getElementById('s_trade_deadline').value; return v ? new Date(v).getTime() : 0; })(),
   };
   const res = await fetch('/api/settings', {
     method: 'PATCH',
@@ -670,8 +717,9 @@ async function saveSettings() {
   settingsData = data.settings;
   renderScoringTable();
   updateSettingsMaxPts();
+  renderTradeDeadlineBanner();
   closeModal('settingsModal');
-  showToast('Scoring updated!', 'success');
+  showToast('Settings saved!', 'success');
   await loadLeaderboard();
 }
 

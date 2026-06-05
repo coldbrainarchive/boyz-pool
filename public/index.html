@@ -36,6 +36,12 @@
       <h2>🏆 Leaderboard</h2>
       <button class="btn btn-primary" onclick="openAddPlayer()">+ Add Player</button>
     </div>
+    <!-- Trade deadline banner -->
+    <div id="tradeDeadlineBanner" class="trade-deadline-banner" style="display:none">
+      <div class="trade-deadline-label">🚨 Trade Deadline</div>
+      <div id="tradeDeadlineTimer" class="trade-deadline-timer">—</div>
+    </div>
+
     <!-- Draft banner (shown when draft is active) -->
     <div id="draftBanner" class="draft-banner" style="display:none">
       <div class="draft-banner-top">
@@ -211,6 +217,11 @@
           <span class="toggle-track"><span class="toggle-thumb"></span></span>
         </label>
       </div>
+    </div>
+    <div class="settings-lock-row">
+      <label class="settings-section-label">🚨 Trade Deadline Timer</label>
+      <input type="datetime-local" id="s_trade_deadline" class="modal-input" style="margin-top:8px" />
+      <p class="settings-hint">Leave empty to hide the countdown banner.</p>
     </div>
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeModal('settingsModal')">Cancel</button>
