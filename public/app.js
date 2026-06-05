@@ -447,7 +447,7 @@ async function updatePlayerPhoto(playerId) {
 async function removePlayer(id, name) {
   if (!confirm(`Remove ${name} and all their teams?`)) return;
   await fetch(`/api/players/${id}`, { method: 'DELETE' });
-  closeModal('managePLayersModal');
+  closeModal('managePlayersModal');
   showToast(`${name} removed`, 'success');
   await loadAll();
   renderManagePlayers();

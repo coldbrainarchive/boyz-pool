@@ -29,6 +29,18 @@ CREATE TABLE IF NOT EXISTS settings (
   value TEXT NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS draft (
+  id INTEGER PRIMARY KEY CHECK (id = 1),
+  active INTEGER NOT NULL DEFAULT 0,
+  pick_number INTEGER NOT NULL DEFAULT 0,
+  timer_enabled INTEGER NOT NULL DEFAULT 0,
+  timer_seconds INTEGER NOT NULL DEFAULT 18000,
+  pick_started_at TEXT,
+  player_order TEXT NOT NULL DEFAULT '[]'
+);
+INSERT OR IGNORE INTO draft (id, active, pick_number, timer_enabled, timer_seconds, player_order)
+  VALUES (1, 0, 0, 0, 18000, '[]');
+
 CREATE TABLE IF NOT EXISTS activity_log (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   action TEXT NOT NULL,
