@@ -1,6 +1,9 @@
-import { json } from '../../../_shared.js';
+import { json, getSettings } from '../../../_shared.js';
 
 export async function onRequestPost({ env, params, request }) {
+  const settings = await getSettings(env.DB);
+  if (settings.teams_locked) return json({ error: 'Team changes are locked' }, 403);
+
   const { teamCode } = await request.json();
 
   const team   = await env.DB.prepare('SELECT code, name, flag FROM teams WHERE code = ?').bind(teamCode).first();

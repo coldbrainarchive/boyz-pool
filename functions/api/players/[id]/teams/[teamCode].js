@@ -1,6 +1,8 @@
-import { json } from '../../../_shared.js';
+import { json, getSettings } from '../../../_shared.js';
 
 export async function onRequestDelete({ env, params }) {
+  const settings = await getSettings(env.DB);
+  if (settings.teams_locked) return json({ error: 'Team changes are locked' }, 403);
   // Fetch names before deleting so we can log
   const [player, team] = await Promise.all([
     env.DB.prepare('SELECT name FROM players WHERE id = ?').bind(params.id).first(),

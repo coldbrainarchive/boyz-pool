@@ -1,6 +1,7 @@
 export const DEFAULT_SETTINGS = {
   pts_groups: 5, pts_r16: 10, pts_qf: 10,
   pts_sf: 10, pts_runner_up: 10, pts_champion: 10,
+  teams_locked: 0,
 };
 
 export const VALID_STAGES = [null, 'GROUP', 'R32', 'R16', 'QF', 'SF', 'FINAL', 'WINNER'];

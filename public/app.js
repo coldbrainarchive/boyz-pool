@@ -494,6 +494,7 @@ function handleTeamClick(teamCode) {
 }
 
 function openAssign(teamCode) {
+  if (settingsData.teams_locked) { showToast('Team changes are locked', 'error'); return; }
   // Always re-fetch draft state before deciding — avoids stale cached state
   fetch('/api/draft').then(r => r.json()).then(fresh => {
     draftState = fresh;
@@ -513,6 +514,8 @@ function openAssign(teamCode) {
     // Fallback to normal modal if fetch fails
     const team = teamsData.find(t => t.code === teamCode);
     pendingAssignTeamCode = teamCode;
+    document.getElementById('assignModalTitle').textContent = `Assign ${team?.flag || ''} ${team?.name || teamCode}`;
+    document.getElementById('assignModalSub').textContent = 'Choose a player to assign this team to:';
     const select = document.getElementById('assignPlayerSelect');
     if (!leaderboardData.length) { showToast('Add a player first', 'error'); return; }
     select.innerHTML = leaderboardData.map(p => `<option value="${p.id}">${escHtml(p.name)}</option>`).join('');
@@ -584,6 +587,7 @@ function openUnassign(playerId, teamCode, teamName) {
 
 async function submitUnassign() {
   if (!pendingUnassign) return;
+  if (settingsData.teams_locked) { showToast('Team changes are locked', 'error'); closeModal('unassignModal'); return; }
   const { playerId, teamCode, teamName } = pendingUnassign;
   await fetch(`/api/players/${playerId}/teams/${teamCode}`, { method: 'DELETE' });
   closeModal('unassignModal');
@@ -596,12 +600,13 @@ async function submitUnassign() {
 
 function openSettings() {
   const s = settingsData;
-  document.getElementById('s_r16_bonus').value = s.pts_groups    ?? 5;
-  document.getElementById('s_r16').value       = s.pts_r16       ?? 10;
-  document.getElementById('s_qf').value        = s.pts_qf        ?? 10;
-  document.getElementById('s_sf').value        = s.pts_sf        ?? 10;
-  document.getElementById('s_runner_up').value = s.pts_runner_up ?? 10;
-  document.getElementById('s_champion').value  = s.pts_champion  ?? 10;
+  document.getElementById('s_r16_bonus').value   = s.pts_groups    ?? 5;
+  document.getElementById('s_r16').value         = s.pts_r16       ?? 10;
+  document.getElementById('s_qf').value          = s.pts_qf        ?? 10;
+  document.getElementById('s_sf').value          = s.pts_sf        ?? 10;
+  document.getElementById('s_runner_up').value   = s.pts_runner_up ?? 10;
+  document.getElementById('s_champion').value    = s.pts_champion  ?? 10;
+  document.getElementById('s_teams_locked').checked = !!s.teams_locked;
   updateSettingsPreview();
 
   ['s_r16_bonus','s_r16','s_qf','s_sf','s_runner_up','s_champion'].forEach(id => {
@@ -632,6 +637,7 @@ async function saveSettings() {
     pts_sf:        parseInt(document.getElementById('s_sf').value)        || 0,
     pts_runner_up: parseInt(document.getElementById('s_runner_up').value) || 0,
     pts_champion:  parseInt(document.getElementById('s_champion').value)  || 0,
+    teams_locked:  document.getElementById('s_teams_locked').checked ? 1 : 0,
   };
   const res = await fetch('/api/settings', {
     method: 'PATCH',
@@ -775,6 +781,8 @@ async function autoAdvanceDraft() {
       showToast('⏰ Time\'s up — skipped to next picker', '');
       await loadDraft();
       await loadAll();
+    } else if (data.skipped) {
+      await loadDraft(); // another client already advanced — sync UI
     }
   } catch (_) {}
 }
@@ -853,6 +861,7 @@ async function startDraft() {
 
   const selectedId  = parseInt(document.getElementById('draftStartPlayer')?.value);
   const playerIndex = ordered.findIndex(p => p.id === selectedId);
+  if (playerIndex === -1) { showToast('Selected player not found', 'error'); return; }
 
   // Use total existing picks as the base pick number — auto-detects the round
   const totalPicks  = leaderboardData.reduce((sum, p) => sum + (p.teams?.length || 0), 0);
@@ -1084,14 +1093,14 @@ setInterval(loadAll, 60_000);
 
 // ─── Force refresh all clients ────────────────────────────────────────────────
 
-let localVersion = '0';
+let localVersion = null;
 
 async function checkVersion() {
   try {
     const res = await fetch('/api/version');
     if (!res.ok) return;
     const { version } = await res.json();
-    if (localVersion === '0') {
+    if (localVersion === null) {
       localVersion = version; // first load — store as baseline
     } else if (version !== localVersion) {
       location.reload(); // server version changed — reload silently
