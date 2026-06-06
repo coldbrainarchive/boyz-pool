@@ -1176,8 +1176,8 @@ input[type=checkbox]:checked + .toggle-track .toggle-thumb { transform: translat
     flex-shrink: 0;
   }
 
-  /* Scrollable inner content */
-  .modal > *:not(.modal-actions):not(h3) { flex: 1; overflow-y: auto; }
+  /* Scrollable inner content — modals without modal-scroll-body fallback */
+  .modal > *:not(.modal-actions):not(h3):not(.modal-scroll-body):not(.trade-modal-inner) { flex: 1; overflow-y: auto; }
   .modal h3 {
     font-size: 17px;
     padding: 16px 20px 0;
@@ -1188,13 +1188,22 @@ input[type=checkbox]:checked + .toggle-track .toggle-thumb { transform: translat
   .modal-input { margin: 12px 20px 0; width: calc(100% - 40px); }
   select.modal-input { width: calc(100% - 40px); }
 
-  /* Modal body padding */
-  .rules-list,
-  .scoring-table,
-  .settings-grid {
-    padding: 0 20px;
-    margin-top: 12px;
+  /* Single scrollable wrapper used by Rules + Settings */
+  .modal-scroll-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 14px 20px 4px;
   }
+  /* Reset elements inside wrapper — they no longer need their own side padding */
+  .modal-scroll-body .modal-sub { padding: 0; margin-bottom: 12px; }
+  .modal-scroll-body .rules-list,
+  .modal-scroll-body .scoring-table,
+  .modal-scroll-body .settings-grid { padding: 0; margin-top: 0; }
+  .modal-scroll-body .settings-max-note { padding: 0; }
+  .modal-scroll-body .settings-lock-row { padding-top: 12px; }
+  .modal-scroll-body h4 { padding: 0; margin-top: 16px; }
+  /* datetime input inside scroll body */
+  .modal-scroll-body .modal-input { margin: 8px 0 0; width: 100%; }
 
   .modal h4 { padding: 0 20px; margin-top: 14px; }
   .settings-max-note { padding: 0 20px; }

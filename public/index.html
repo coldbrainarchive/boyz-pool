@@ -150,17 +150,19 @@
 <div class="modal-overlay" id="rulesModal">
   <div class="modal modal-wide">
     <h3>⚽ The Boyz Pool — Rules</h3>
-    <ul class="rules-list">
-      <li>Entry fee: <strong>$10 per person</strong></li>
-      <li>Each player picks <strong>8 teams</strong> from the 48 in the tournament</li>
-      <li>Teams are first-come, first-served — once picked, no one else can take it</li>
-      <li>Teams can be swapped between players before the tournament starts</li>
-      <li>Once the tournament begins, all picks are final</li>
-      <li>The player with the <strong>most total points wins</strong> — points add up across all 8 of your teams</li>
-      <li>Tiebreaker: whoever has a team that went furthest in the tournament wins</li>
-    </ul>
-    <h4>Scoring — Points earned per team</h4>
-    <div class="scoring-table" id="rulesScoring"></div>
+    <div class="modal-scroll-body">
+      <ul class="rules-list">
+        <li>Entry fee: <strong>$10 per person</strong></li>
+        <li>Each player picks <strong>8 teams</strong> from the 48 in the tournament</li>
+        <li>Teams are first-come, first-served — once picked, no one else can take it</li>
+        <li>Teams can be swapped between players before the tournament starts</li>
+        <li>Once the tournament begins, all picks are final</li>
+        <li>The player with the <strong>most total points wins</strong> — points add up across all 8 of your teams</li>
+        <li>Tiebreaker: whoever has a team that went furthest in the tournament wins</li>
+      </ul>
+      <h4>Scoring — Points earned per team</h4>
+      <div class="scoring-table" id="rulesScoring"></div>
+    </div>
     <div class="modal-actions">
       <button class="btn btn-primary" onclick="closeModal('rulesModal')">Got it</button>
     </div>
@@ -186,7 +188,8 @@
 <div class="modal-overlay" id="settingsModal">
   <div class="modal modal-wide">
     <h3>⚙️ Customize Scoring</h3>
-    <p class="modal-sub">Points earned when a team reaches each stage. Changes affect all scores immediately.</p>
+    <div class="modal-scroll-body">
+    <p class="modal-sub" style="margin-bottom:14px">Points earned when a team reaches each stage. Changes affect all scores immediately.</p>
     <div class="settings-grid">
       <div class="settings-row settings-static-row">
         <label>Eliminated in Group Stage</label>
@@ -237,6 +240,7 @@
       </div>
       <input type="datetime-local" id="s_trade_deadline" class="modal-input" style="margin-top:8px" />
     </div>
+    </div><!-- end modal-scroll-body -->
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeModal('settingsModal')">Cancel</button>
       <button class="btn btn-primary" onclick="saveSettings()">Save</button>
