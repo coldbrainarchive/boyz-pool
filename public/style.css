@@ -1192,6 +1192,7 @@ input[type=checkbox]:checked + .toggle-track .toggle-thumb { transform: translat
   .modal-scroll-body {
     flex: 1;
     overflow-y: auto;
+    overflow-x: hidden;
     padding: 14px 20px 4px;
   }
   /* Reset elements inside wrapper — they no longer need their own side padding */
@@ -1241,11 +1242,13 @@ input[type=checkbox]:checked + .toggle-track .toggle-thumb { transform: translat
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
-    padding: 10px 12px;
-    gap: 12px;
+    padding: 9px 12px;
+    gap: 8px;
   }
-  .settings-row label { font-size: 12px; }
-  .pts-input { width: 44px; font-size: 15px; }
+  .settings-row label { font-size: 12px; flex: 1; min-width: 0; }
+  .settings-input-wrap { flex-shrink: 0; }
+  .pts-input { width: 40px; font-size: 14px; }
+  .settings-static-val { font-size: 11px; flex-shrink: 0; }
 
   /* ── Match cards ── */
   .match-card { padding: 10px 12px; }

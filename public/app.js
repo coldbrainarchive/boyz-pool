@@ -658,6 +658,15 @@ function renderTradeDeadlineBanner() {
     if (ms <= 0) {
       timerEl.textContent = 'CLOSED';
       clearInterval(tradeDeadlineInterval);
+      if (settingsData.trade_deadline_active) {
+        settingsData.trade_deadline_active = 0;
+        fetch('/api/settings', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ trade_deadline_active: 0 }),
+        }).catch(() => {});
+        if (market) market.style.display = 'none';
+      }
       return;
     }
     const totalSecs = Math.floor(ms / 1000);
