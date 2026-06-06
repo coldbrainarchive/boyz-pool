@@ -31,7 +31,7 @@ const STAGE_LABELS = {
 // ─── Data Loading ─────────────────────────────────────────────────────────────
 
 async function loadAll() {
-  await Promise.all([loadLeaderboard(), loadTeams(), loadSettings(), loadMatches(), loadActivity(), loadDraft(), loadTrades()]);
+  await Promise.all([loadLeaderboard(), loadTeams(), loadSettings(), loadActivity(), loadDraft(), loadTrades()]);
 }
 
 async function loadLeaderboard() {
