@@ -1259,7 +1259,7 @@ input[type=checkbox]:checked + .toggle-track .toggle-thumb { transform: translat
   .toast { bottom: 16px; font-size: 13px; padding: 8px 16px; width: 85%; text-align: center; }
 
   /* ── Propose Trade modal ── */
-  .trade-modal-inner { padding: 12px 16px 8px; }
+  .trade-modal-inner { padding: 12px 16px 8px; flex: 1; overflow-y: auto; overflow-x: hidden; }
 }
 
 /* ─── Trade Market ──────────────────────────────────────────────────────────── */
