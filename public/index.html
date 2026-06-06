@@ -32,10 +32,20 @@
 <main>
   <!-- Pool tab: Leaderboard + Teams -->
   <div class="tab-panel active" id="tab-leaderboard">
-    <div class="section-header">
-      <h2>🏆 Leaderboard</h2>
-      <button class="btn btn-primary" onclick="openAddPlayer()">+ Add Player</button>
+
+    <!-- Draft banner (shown when draft is active) -->
+    <div id="draftBanner" class="draft-banner" style="display:none">
+      <div class="draft-banner-top">
+        <span id="draftBannerRound" class="draft-round-label">Round 2 · Snake 🐍</span>
+        <span id="draftBannerPick" class="draft-pick-label">Pick 7 of 48</span>
+      </div>
+      <div class="draft-banner-middle">
+        <span id="draftBannerName" class="draft-on-clock">—</span>
+        <span class="draft-clock-label">is on the clock</span>
+      </div>
+      <div id="draftBannerTimer" class="draft-banner-timer" style="display:none">—</div>
     </div>
+
     <!-- Trade deadline banner -->
     <div id="tradeDeadlineBanner" class="trade-deadline-banner" style="display:none">
       <div class="trade-deadline-label">🚨 Trade Deadline</div>
@@ -51,23 +61,8 @@
       <div id="tradeList" class="trade-list"></div>
     </div>
 
-    <!-- Draft banner (shown when draft is active) -->
-    <div id="draftBanner" class="draft-banner" style="display:none">
-      <div class="draft-banner-top">
-        <span id="draftBannerRound" class="draft-round-label">Round 2 · Snake 🐍</span>
-        <span id="draftBannerPick" class="draft-pick-label">Pick 7 of 48</span>
-      </div>
-      <div class="draft-banner-middle">
-        <span id="draftBannerName" class="draft-on-clock">—</span>
-        <span class="draft-clock-label">is on the clock</span>
-      </div>
-      <div id="draftBannerTimer" class="draft-banner-timer" style="display:none">—</div>
-    </div>
-
-    <div id="leaderboard" class="leaderboard"></div>
-
     <!-- Activity Log (collapsible) -->
-    <div class="section-header collapsible-header" onclick="toggleActivity()" style="margin-top:28px;cursor:pointer">
+    <div class="section-header collapsible-header" onclick="toggleActivity()" style="margin-top:8px;cursor:pointer">
       <div class="activity-header-left">
         <h2>📋 Activity</h2>
         <span class="activity-badge" id="activityBadge"></span>
@@ -75,6 +70,13 @@
       <span class="collapse-arrow" id="activityArrow">›</span>
     </div>
     <div id="activityLog" class="activity-log collapsed"></div>
+
+    <!-- Leaderboard -->
+    <div class="section-header" style="margin-top:28px">
+      <h2>🏆 Leaderboard</h2>
+      <button class="btn btn-primary" onclick="openAddPlayer()">+ Add Player</button>
+    </div>
+    <div id="leaderboard" class="leaderboard"></div>
 
     <!-- All Teams -->
     <div class="section-header" style="margin-top:28px">
