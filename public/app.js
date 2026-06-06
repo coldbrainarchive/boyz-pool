@@ -1347,6 +1347,8 @@ function openProposeTradeModal() {
   const allOpts = leaderboardData.map(p => `<option value="${p.id}">${escHtml(p.name)}</option>`).join('');
   proposerSel.innerHTML = '<option value="">— Who are you? —</option>' + allOpts;
   receiverSel.innerHTML = '<option value="">— Other player —</option>' + allOpts;
+  proposerSel.value = '';
+  receiverSel.value = '';
   document.getElementById('tradeOfferChips').innerHTML = '<span class="trade-chip-hint">Select your name above</span>';
   document.getElementById('tradeRequestChips').innerHTML = '<span class="trade-chip-hint">Select a player above</span>';
   openModal('proposeTradeModal');

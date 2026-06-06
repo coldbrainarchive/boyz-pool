@@ -351,21 +351,24 @@
 <div class="modal-overlay" id="proposeTradeModal">
   <div class="modal modal-wide">
     <h3>🔄 Propose Trade</h3>
-    <div class="trade-form-group">
-      <label class="trade-form-label">I am...</label>
-      <select id="tradeProposer" class="modal-input" onchange="onProposerChange()"></select>
-    </div>
-    <div class="trade-form-group">
-      <label class="trade-form-label">I'm offering (tap to select):</label>
-      <div id="tradeOfferChips" class="trade-chip-grid"><span class="trade-chip-hint">Select your name above</span></div>
-    </div>
-    <div class="trade-form-group">
-      <label class="trade-form-label">Trading with...</label>
-      <select id="tradeReceiver" class="modal-input" onchange="onReceiverChange()"></select>
-    </div>
-    <div class="trade-form-group">
-      <label class="trade-form-label">I want (tap to select):</label>
-      <div id="tradeRequestChips" class="trade-chip-grid"><span class="trade-chip-hint">Select a player above</span></div>
+    <div class="trade-modal-inner">
+      <div class="trade-modal-card">
+        <div class="trade-card-section-label">You</div>
+        <select id="tradeProposer" class="trade-modal-select" onchange="onProposerChange()">
+          <option value="">— Who are you? —</option>
+        </select>
+        <div class="trade-card-section-label" style="margin-top:14px">Teams you're offering</div>
+        <div id="tradeOfferChips" class="trade-chip-grid"><span class="trade-chip-hint">Select your name above</span></div>
+      </div>
+      <div class="trade-for-divider">⇄ for</div>
+      <div class="trade-modal-card">
+        <div class="trade-card-section-label">Trading with</div>
+        <select id="tradeReceiver" class="trade-modal-select" onchange="onReceiverChange()">
+          <option value="">— Other player —</option>
+        </select>
+        <div class="trade-card-section-label" style="margin-top:14px">Teams you want</div>
+        <div id="tradeRequestChips" class="trade-chip-grid"><span class="trade-chip-hint">Select a player above</span></div>
+      </div>
     </div>
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeModal('proposeTradeModal')">Cancel</button>
