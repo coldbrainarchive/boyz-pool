@@ -140,9 +140,9 @@ function renderActivity() {
           <span class="activity-flag">🔄</span>
           <div class="activity-text">
             <span class="activity-player">${escHtml(e.proposer_name)}</span>
-            ${statusLabel}
-            <span class="activity-action" style="color:var(--muted)">trade with</span>
+            <span class="activity-action" style="color:var(--muted)">→</span>
             <span class="activity-player">${escHtml(e.receiver_name)}</span>
+            ${statusLabel}
             <span class="activity-trade-teams">${offerStr} ⇄ ${reqStr}</span>
             ${responseNote}
           </div>
